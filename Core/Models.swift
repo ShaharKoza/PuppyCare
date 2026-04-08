@@ -136,6 +136,32 @@ struct DogProfile: Codable {
     var dismissedVaccineReminders: [String]
     var hasCompletedOnboarding:    Bool
 
+    // MARK: - Dog Profile Auto-Configuration (new — all optional/defaulted for backward compatibility)
+
+    /// The operational profile the user explicitly selected in setup.
+    /// nil = not yet configured via the new setup flow.
+    var selectedOperationalProfile: OperationalDogProfile?
+
+    /// Birth date — used for precise vaccine reminder scheduling.
+    var birthDate: Date?
+
+    /// Physical / lifestyle inputs used by DogProfileEngine.
+    var sizeGroup:        SizeGroup        = .medium
+    var headType:         HeadType         = .normal
+    var coatType:         CoatType         = .regular
+    var specialCondition: SpecialCondition = .none
+    var lifestyleFlags:   [LifestyleFlag]  = []
+    var regionRisk:       RegionRisk       = .centralOrSouth
+
+    /// Auto-configured health reminders — computed and saved by DogProfileEngine.
+    var derivedHealthReminders: DerivedHealthReminders?
+
+    /// True after the user has completed the new auto-config setup flow at least once.
+    var hasCompletedProfileSetup: Bool = false
+
+    /// Whether the user has manually overridden any auto-configured thresholds.
+    var manualOverridesEnabled: Bool = false
+
     // MARK: - Empty default
 
     static let empty = DogProfile(
@@ -164,6 +190,12 @@ struct DogProfile: Codable {
         case tempWarnHigh, tempCriticalHigh, tempWarnLow, tempCriticalLow
         case walkTimes
         case dismissedVaccineReminders, hasCompletedOnboarding
+        // New keys
+        case selectedOperationalProfile
+        case birthDate
+        case sizeGroup, headType, coatType, specialCondition, lifestyleFlags, regionRisk
+        case derivedHealthReminders
+        case hasCompletedProfileSetup, manualOverridesEnabled
     }
 
     init(
@@ -178,7 +210,19 @@ struct DogProfile: Codable {
         tempWarnHigh: Double = 28, tempCriticalHigh: Double = 32,
         tempWarnLow: Double = 12, tempCriticalLow: Double = 8,
         walkTimes: [String] = [],
-        dismissedVaccineReminders: [String], hasCompletedOnboarding: Bool
+        dismissedVaccineReminders: [String], hasCompletedOnboarding: Bool,
+        // New — all optional with safe defaults
+        selectedOperationalProfile: OperationalDogProfile? = nil,
+        birthDate: Date? = nil,
+        sizeGroup: SizeGroup = .medium,
+        headType: HeadType = .normal,
+        coatType: CoatType = .regular,
+        specialCondition: SpecialCondition = .none,
+        lifestyleFlags: [LifestyleFlag] = [],
+        regionRisk: RegionRisk = .centralOrSouth,
+        derivedHealthReminders: DerivedHealthReminders? = nil,
+        hasCompletedProfileSetup: Bool = false,
+        manualOverridesEnabled: Bool = false
     ) {
         self.name = name; self.breed = breed; self.sex = sex
         self.ageMonths = ageMonths; self.weightKg = weightKg
@@ -194,6 +238,15 @@ struct DogProfile: Codable {
         self.walkTimes = walkTimes
         self.dismissedVaccineReminders = dismissedVaccineReminders
         self.hasCompletedOnboarding = hasCompletedOnboarding
+        // New fields
+        self.selectedOperationalProfile = selectedOperationalProfile
+        self.birthDate = birthDate
+        self.sizeGroup = sizeGroup; self.headType = headType
+        self.coatType = coatType; self.specialCondition = specialCondition
+        self.lifestyleFlags = lifestyleFlags; self.regionRisk = regionRisk
+        self.derivedHealthReminders = derivedHealthReminders
+        self.hasCompletedProfileSetup = hasCompletedProfileSetup
+        self.manualOverridesEnabled = manualOverridesEnabled
     }
 
     init(from decoder: Decoder) throws {
@@ -216,7 +269,7 @@ struct DogProfile: Codable {
         dismissedVaccineReminders = try c.decode([String].self, forKey: .dismissedVaccineReminders)
         hasCompletedOnboarding  = try c.decode(Bool.self,    forKey: .hasCompletedOnboarding)
 
-        // New fields — safe defaults when key is absent
+        // Existing optional fields — safe defaults when key is absent
         scheduleItems       = (try? c.decode([ScheduleItem].self, forKey: .scheduleItems))  ?? []
         kennelSessionStart  = try? c.decodeIfPresent(Date.self,   forKey: .kennelSessionStart)
         tempWarnHigh        = (try? c.decode(Double.self,         forKey: .tempWarnHigh))       ?? 28
@@ -224,6 +277,19 @@ struct DogProfile: Codable {
         tempWarnLow         = (try? c.decode(Double.self,         forKey: .tempWarnLow))        ?? 12
         tempCriticalLow     = (try? c.decode(Double.self,         forKey: .tempCriticalLow))    ?? 8
         walkTimes           = (try? c.decode([String].self,       forKey: .walkTimes))          ?? []
+
+        // New auto-config fields — all safe-defaulted so old saved data never breaks
+        selectedOperationalProfile = try? c.decodeIfPresent(OperationalDogProfile.self, forKey: .selectedOperationalProfile)
+        birthDate          = try? c.decodeIfPresent(Date.self,               forKey: .birthDate)
+        sizeGroup          = (try? c.decode(SizeGroup.self,        forKey: .sizeGroup))        ?? .medium
+        headType           = (try? c.decode(HeadType.self,         forKey: .headType))         ?? .normal
+        coatType           = (try? c.decode(CoatType.self,         forKey: .coatType))         ?? .regular
+        specialCondition   = (try? c.decode(SpecialCondition.self, forKey: .specialCondition)) ?? .none
+        lifestyleFlags     = (try? c.decode([LifestyleFlag].self,  forKey: .lifestyleFlags))   ?? []
+        regionRisk         = (try? c.decode(RegionRisk.self,       forKey: .regionRisk))       ?? .centralOrSouth
+        derivedHealthReminders  = try? c.decodeIfPresent(DerivedHealthReminders.self, forKey: .derivedHealthReminders)
+        hasCompletedProfileSetup = (try? c.decode(Bool.self,       forKey: .hasCompletedProfileSetup)) ?? false
+        manualOverridesEnabled   = (try? c.decode(Bool.self,       forKey: .manualOverridesEnabled))   ?? false
     }
 
     // MARK: - Derived helpers

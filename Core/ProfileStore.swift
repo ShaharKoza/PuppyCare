@@ -169,6 +169,26 @@ final class ProfileStore: ObservableObject {
         saveImmediately()
     }
 
+    /// Called by DogProfileSetupView after the user completes the setup flow.
+    /// Applies auto-derived sensor thresholds and health reminders to the live profile.
+    /// Existing manual overrides are preserved if manualOverridesEnabled is true.
+    func applyDerivedConfiguration(_ config: DogProfileEngine.DerivedConfiguration) {
+        // Sensor thresholds — only apply if the user has not manually overridden them
+        if !profile.manualOverridesEnabled {
+            profile.tempWarnHigh     = config.sensorDefaults.tempWarnHigh
+            profile.tempCriticalHigh = config.sensorDefaults.tempCriticalHigh
+            profile.tempWarnLow      = config.sensorDefaults.tempWarnLow
+            profile.tempCriticalLow  = config.sensorDefaults.tempCriticalLow
+        }
+        // Always update operational profile, reminders, and completion flag
+        profile.selectedOperationalProfile = config.operationalProfile
+        profile.derivedHealthReminders     = config.healthReminders
+        profile.hasCompletedProfileSetup   = true
+
+        syncThresholds(profile: profile)
+        saveImmediately()
+    }
+
     // MARK: - Legacy meal-time calculation (used only for migration)
 
     private func legacyMealTimes(firstTimeString: String, mealsCount: Int) -> [Date] {
