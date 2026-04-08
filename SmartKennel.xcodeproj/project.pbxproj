@@ -1,0 +1,659 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		7E2DE13D2F79762D00DD9497 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 7E2DE13C2F79762D00DD9497 /* FirebaseCore */; };
+		7E2DE13F2F79762D00DD9497 /* FirebaseDatabase in Frameworks */ = {isa = PBXBuildFile; productRef = 7E2DE13E2F79762D00DD9497 /* FirebaseDatabase */; };
+		7E608F2D2F801ED0000D0B81 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = 7E608F2C2F801ED0000D0B81 /* FirebaseMessaging */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		7E2DE1112F7974C400DD9497 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7E2DE0FB2F7974C300DD9497 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 7E2DE1022F7974C300DD9497;
+			remoteInfo = SmartKennel;
+		};
+		7E2DE11B2F7974C400DD9497 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7E2DE0FB2F7974C300DD9497 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 7E2DE1022F7974C300DD9497;
+			remoteInfo = SmartKennel;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		7E2DE1032F7974C300DD9497 /* SmartKennel.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SmartKennel.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		7E2DE1102F7974C400DD9497 /* SmartKennelTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SmartKennelTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		7E2DE11A2F7974C400DD9497 /* SmartKennelUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SmartKennelUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		7E2DE1052F7974C300DD9497 /* SmartKennel */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = SmartKennel;
+			sourceTree = "<group>";
+		};
+		7E2DE1132F7974C400DD9497 /* SmartKennelTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = SmartKennelTests;
+			sourceTree = "<group>";
+		};
+		7E2DE11D2F7974C400DD9497 /* SmartKennelUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = SmartKennelUITests;
+			sourceTree = "<group>";
+		};
+		7E2DE2012F7C432500DD9497 /* App */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = App;
+			sourceTree = "<group>";
+		};
+		7E2DE2072F7C432700DD9497 /* Core */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Core;
+			sourceTree = "<group>";
+		};
+		7E2DE20D2F7C432900DD9497 /* Resources */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		7E2DE2152F7C432A00DD9497 /* Views */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Views;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		7E2DE1002F7974C300DD9497 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7E608F2D2F801ED0000D0B81 /* FirebaseMessaging in Frameworks */,
+				7E2DE13F2F79762D00DD9497 /* FirebaseDatabase in Frameworks */,
+				7E2DE13D2F79762D00DD9497 /* FirebaseCore in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7E2DE10D2F7974C400DD9497 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7E2DE1172F7974C400DD9497 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		7E2DE0FA2F7974C300DD9497 = {
+			isa = PBXGroup;
+			children = (
+				7E2DE1052F7974C300DD9497 /* SmartKennel */,
+				7E2DE1132F7974C400DD9497 /* SmartKennelTests */,
+				7E2DE11D2F7974C400DD9497 /* SmartKennelUITests */,
+				7E2DE1042F7974C300DD9497 /* Products */,
+				7E2DE2012F7C432500DD9497 /* App */,
+				7E2DE2072F7C432700DD9497 /* Core */,
+				7E2DE20D2F7C432900DD9497 /* Resources */,
+				7E2DE2152F7C432A00DD9497 /* Views */,
+				7E608F2B2F801ED0000D0B81 /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		7E2DE1042F7974C300DD9497 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				7E2DE1032F7974C300DD9497 /* SmartKennel.app */,
+				7E2DE1102F7974C400DD9497 /* SmartKennelTests.xctest */,
+				7E2DE11A2F7974C400DD9497 /* SmartKennelUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		7E608F2B2F801ED0000D0B81 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		7E2DE1022F7974C300DD9497 /* SmartKennel */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7E2DE1242F7974C400DD9497 /* Build configuration list for PBXNativeTarget "SmartKennel" */;
+			buildPhases = (
+				7E2DE0FF2F7974C300DD9497 /* Sources */,
+				7E2DE1002F7974C300DD9497 /* Frameworks */,
+				7E2DE1012F7974C300DD9497 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				7E2DE1052F7974C300DD9497 /* SmartKennel */,
+				7E2DE2012F7C432500DD9497 /* App */,
+				7E2DE2072F7C432700DD9497 /* Core */,
+				7E2DE20D2F7C432900DD9497 /* Resources */,
+				7E2DE2152F7C432A00DD9497 /* Views */,
+			);
+			name = SmartKennel;
+			packageProductDependencies = (
+				7E2DE13C2F79762D00DD9497 /* FirebaseCore */,
+				7E2DE13E2F79762D00DD9497 /* FirebaseDatabase */,
+				7E608F2C2F801ED0000D0B81 /* FirebaseMessaging */,
+			);
+			productName = SmartKennel;
+			productReference = 7E2DE1032F7974C300DD9497 /* SmartKennel.app */;
+			productType = "com.apple.product-type.application";
+		};
+		7E2DE10F2F7974C400DD9497 /* SmartKennelTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7E2DE1272F7974C400DD9497 /* Build configuration list for PBXNativeTarget "SmartKennelTests" */;
+			buildPhases = (
+				7E2DE10C2F7974C400DD9497 /* Sources */,
+				7E2DE10D2F7974C400DD9497 /* Frameworks */,
+				7E2DE10E2F7974C400DD9497 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				7E2DE1122F7974C400DD9497 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				7E2DE1132F7974C400DD9497 /* SmartKennelTests */,
+			);
+			name = SmartKennelTests;
+			packageProductDependencies = (
+			);
+			productName = SmartKennelTests;
+			productReference = 7E2DE1102F7974C400DD9497 /* SmartKennelTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		7E2DE1192F7974C400DD9497 /* SmartKennelUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7E2DE12A2F7974C400DD9497 /* Build configuration list for PBXNativeTarget "SmartKennelUITests" */;
+			buildPhases = (
+				7E2DE1162F7974C400DD9497 /* Sources */,
+				7E2DE1172F7974C400DD9497 /* Frameworks */,
+				7E2DE1182F7974C400DD9497 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				7E2DE11C2F7974C400DD9497 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				7E2DE11D2F7974C400DD9497 /* SmartKennelUITests */,
+			);
+			name = SmartKennelUITests;
+			packageProductDependencies = (
+			);
+			productName = SmartKennelUITests;
+			productReference = 7E2DE11A2F7974C400DD9497 /* SmartKennelUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		7E2DE0FB2F7974C300DD9497 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2630;
+				LastUpgradeCheck = 2630;
+				TargetAttributes = {
+					7E2DE1022F7974C300DD9497 = {
+						CreatedOnToolsVersion = 26.3;
+					};
+					7E2DE10F2F7974C400DD9497 = {
+						CreatedOnToolsVersion = 26.3;
+						TestTargetID = 7E2DE1022F7974C300DD9497;
+					};
+					7E2DE1192F7974C400DD9497 = {
+						CreatedOnToolsVersion = 26.3;
+						TestTargetID = 7E2DE1022F7974C300DD9497;
+					};
+				};
+			};
+			buildConfigurationList = 7E2DE0FE2F7974C300DD9497 /* Build configuration list for PBXProject "SmartKennel" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 7E2DE0FA2F7974C300DD9497;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				7E2DE13B2F79762D00DD9497 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 7E2DE1042F7974C300DD9497 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				7E2DE1022F7974C300DD9497 /* SmartKennel */,
+				7E2DE10F2F7974C400DD9497 /* SmartKennelTests */,
+				7E2DE1192F7974C400DD9497 /* SmartKennelUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		7E2DE1012F7974C300DD9497 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7E2DE10E2F7974C400DD9497 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7E2DE1182F7974C400DD9497 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		7E2DE0FF2F7974C300DD9497 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7E2DE10C2F7974C400DD9497 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7E2DE1162F7974C400DD9497 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		7E2DE1122F7974C400DD9497 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 7E2DE1022F7974C300DD9497 /* SmartKennel */;
+			targetProxy = 7E2DE1112F7974C400DD9497 /* PBXContainerItemProxy */;
+		};
+		7E2DE11C2F7974C400DD9497 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 7E2DE1022F7974C300DD9497 /* SmartKennel */;
+			targetProxy = 7E2DE11B2F7974C400DD9497 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		7E2DE1222F7974C400DD9497 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		7E2DE1232F7974C400DD9497 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		7E2DE1252F7974C400DD9497 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = RL4SPPS35Q;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				INFOPLIST_KEY_CFBundleDisplayName = PuppyCare;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.smartkennel.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		7E2DE1262F7974C400DD9497 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = RL4SPPS35Q;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = PuppyCare;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.smartkennel.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		7E2DE1282F7974C400DD9497 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.shaharapps-com.shaharapps.SmartKennelTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SmartKennel.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/SmartKennel";
+			};
+			name = Debug;
+		};
+		7E2DE1292F7974C400DD9497 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.shaharapps-com.shaharapps.SmartKennelTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SmartKennel.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/SmartKennel";
+			};
+			name = Release;
+		};
+		7E2DE12B2F7974C400DD9497 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.shaharapps-com.shaharapps.SmartKennelUITests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = SmartKennel;
+			};
+			name = Debug;
+		};
+		7E2DE12C2F7974C400DD9497 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.shaharapps-com.shaharapps.SmartKennelUITests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = SmartKennel;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		7E2DE0FE2F7974C300DD9497 /* Build configuration list for PBXProject "SmartKennel" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7E2DE1222F7974C400DD9497 /* Debug */,
+				7E2DE1232F7974C400DD9497 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		7E2DE1242F7974C400DD9497 /* Build configuration list for PBXNativeTarget "SmartKennel" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7E2DE1252F7974C400DD9497 /* Debug */,
+				7E2DE1262F7974C400DD9497 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		7E2DE1272F7974C400DD9497 /* Build configuration list for PBXNativeTarget "SmartKennelTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7E2DE1282F7974C400DD9497 /* Debug */,
+				7E2DE1292F7974C400DD9497 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		7E2DE12A2F7974C400DD9497 /* Build configuration list for PBXNativeTarget "SmartKennelUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7E2DE12B2F7974C400DD9497 /* Debug */,
+				7E2DE12C2F7974C400DD9497 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		7E2DE13B2F79762D00DD9497 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.11.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		7E2DE13C2F79762D00DD9497 /* FirebaseCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7E2DE13B2F79762D00DD9497 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCore;
+		};
+		7E2DE13E2F79762D00DD9497 /* FirebaseDatabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7E2DE13B2F79762D00DD9497 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseDatabase;
+		};
+		7E608F2C2F801ED0000D0B81 /* FirebaseMessaging */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7E2DE13B2F79762D00DD9497 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseMessaging;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 7E2DE0FB2F7974C300DD9497 /* Project object */;
+}
