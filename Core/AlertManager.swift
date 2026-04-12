@@ -257,13 +257,41 @@ struct SensorAnalytics {
     }
 }
 
-// MARK: - Alert Thresholds
+// MARK: - Alert Config
+//
+// Research sources:
+//   • Merck Veterinary Manual — Neonatal care & thermoregulation
+//   • AVMA — Animal housing temperature guidelines
+//   • Brachycephalic Obstructive Airway Syndrome (BOAS) literature
+//   • Canine geriatrics & pediatrics textbooks
+//
+// All thresholds are ambient kennel temperature (°C), not body temperature.
 
-struct AlertThresholds {
-    var warnHigh:     Double = 28
-    var criticalHigh: Double = 32
-    var warnLow:      Double = 12
-    var criticalLow:  Double = 8
+struct AlertConfig {
+
+    // ── Temperature thresholds (°C) ──────────────────────────────────────────
+    var tempWarnHigh:     Double = 28
+    var tempCriticalHigh: Double = 32
+    var tempWarnLow:      Double = 12
+    var tempCriticalLow:  Double = 8
+
+    // ── Sound behaviour ───────────────────────────────────────────────────────
+    /// Sensitivity level drives re-alert cooldown (high = 30 s, standard = 60 s, low = 120 s).
+    var soundSensitivity: SoundSensitivityLevel = .standard
+    /// false → bark events alone do NOT trigger an alert; only sustainedSound does.
+    /// Used for neonatal puppies (whimper/cry, not bark) and brachycephalics (breathing noise).
+    var soundAsStandaloneTrigger: Bool = true
+
+    // ── Motion & inactivity ───────────────────────────────────────────────────
+    var motionSensitivity: MotionSensitivityLevel = .standard
+    /// Seconds of no motion before an inactivity alert fires. 0 = disabled.
+    /// Neonatal puppies sleep ~90 % of the day — inactivity is normal → disabled.
+    var inactiveAlertAfterSeconds: Int = 3600   // 60 min default
+
+    // ── Profile context (drives message wording) ──────────────────────────────
+    var operationalProfile: OperationalDogProfile = .smallDog
+    /// nil = not a puppy / age unknown; set for OperationalDogProfile.youngPuppy.
+    var puppyAgeMonths: Double? = nil
 }
 
 // MARK: - Alert Manager
@@ -275,11 +303,11 @@ final class AlertManager: ObservableObject {
     @Published private(set) var records: [AlertRecord] = []
     @Published private(set) var unreadCount: Int = 0
 
-    private let maxRecords   = 500
+    private let maxRecords    = 500
     private let retentionDays = 30
 
-    // Live thresholds — updated by ProfileStore when profile changes
-    private var thresholds = AlertThresholds()
+    // Live config — fully updated by ProfileStore when profile changes.
+    private var config = AlertConfig()
 
     private let saveURL: URL = {
         let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first
@@ -292,16 +320,21 @@ final class AlertManager: ObservableObject {
 
     private var isFirstUpdate = true
 
-    private var lastBarkAlertDate:   Date?
-    private var lastMotionAlertDate: Date?
-    private var lastLightAlertDate:  Date?
-    private var lastTempAlertDate:   Date?
+    // Per-type last-alert timestamps
+    private var lastBarkAlertDate:       Date?
+    private var lastMotionAlertDate:     Date?
+    private var lastLightAlertDate:      Date?
+    private var lastTempAlertDate:       Date?
+    private var lastInactivityAlertDate: Date?
 
-    private let barkCooldown:   TimeInterval = 60
-    private let motionCooldown: TimeInterval = 300
-    private let lightCooldown:  TimeInterval = 300
-    private let tempCooldown:   TimeInterval = 300
+    // Fixed cooldowns that don't depend on sensitivity
+    private let lightCooldown:      TimeInterval = 300
+    private let tempCooldown:       TimeInterval = 300
+    private let motionCooldown:     TimeInterval = 300   // baseline; overridden by sensitivity
+    /// Minimum re-alert gap for inactivity — prevent flooding while dog stays asleep.
+    private let inactivityAlertCooldown: TimeInterval = 1800  // 30 min
 
+    // Edge-detection state
     private var prevMotionDetected: Bool?
     private var prevLightDetected:  Bool?
 
@@ -327,12 +360,48 @@ final class AlertManager: ObservableObject {
         checkLight(sensor)
     }
 
-    /// Called by ProfileStore when the user changes temperature threshold settings.
+    // MARK: - Config update (called by ProfileStore)
+
+    /// Full alert config update — called whenever the dog profile changes.
+    /// Replaces the old updateThresholds(warnHigh:criticalHigh:warnLow:criticalLow:).
+    func updateAlertConfig(
+        // Temperature
+        warnHigh:     Double,
+        criticalHigh: Double,
+        warnLow:      Double,
+        criticalLow:  Double,
+        // Sound
+        soundSensitivity:         SoundSensitivityLevel,
+        soundAsStandaloneTrigger: Bool,
+        // Motion
+        motionSensitivity:          MotionSensitivityLevel,
+        inactiveAlertAfterMinutes:  Int,
+        // Context
+        operationalProfile: OperationalDogProfile,
+        puppyAgeMonths:     Double?
+    ) {
+        config.tempWarnHigh     = warnHigh
+        config.tempCriticalHigh = criticalHigh
+        config.tempWarnLow      = warnLow
+        config.tempCriticalLow  = criticalLow
+
+        config.soundSensitivity         = soundSensitivity
+        config.soundAsStandaloneTrigger = soundAsStandaloneTrigger
+
+        config.motionSensitivity          = motionSensitivity
+        // inactiveAlertAfterMinutes == 0 disables inactivity alerting (neonatal profile).
+        config.inactiveAlertAfterSeconds  = inactiveAlertAfterMinutes * 60
+
+        config.operationalProfile = operationalProfile
+        config.puppyAgeMonths     = puppyAgeMonths
+    }
+
+    /// Backward-compatible shim — keeps old call sites working if not yet updated.
     func updateThresholds(warnHigh: Double, criticalHigh: Double, warnLow: Double, criticalLow: Double) {
-        thresholds.warnHigh     = warnHigh
-        thresholds.criticalHigh = criticalHigh
-        thresholds.warnLow      = warnLow
-        thresholds.criticalLow  = criticalLow
+        config.tempWarnHigh     = warnHigh
+        config.tempCriticalHigh = criticalHigh
+        config.tempWarnLow      = warnLow
+        config.tempCriticalLow  = criticalLow
     }
 
     func markAllRead() {
@@ -355,8 +424,32 @@ final class AlertManager: ObservableObject {
 
     var analytics: SensorAnalytics { SensorAnalytics(records: records) }
 
+    // MARK: - Computed cooldowns
+
+    /// Bark re-alert cooldown scales with sound sensitivity.
+    /// High sensitivity (brachycephalic / senior) → re-alert sooner.
+    private var effectiveBarkCooldown: TimeInterval {
+        switch config.soundSensitivity {
+        case .high:     return 30
+        case .standard: return 60
+        case .low:      return 120
+        }
+    }
+
+    /// Motion re-alert cooldown scales with motion sensitivity.
+    private var effectiveMotionCooldown: TimeInterval {
+        switch config.motionSensitivity {
+        case .high:     return 120
+        case .standard: return 300
+        case .low:      return 600
+        }
+    }
+
     // MARK: - Threshold Checks
 
+    // ── Temperature ────────────────────────────────────────────────────────────
+    // Research: ambient kennel thresholds derived from Merck Veterinary Manual
+    // and AVMA guidelines, sub-divided by operational profile in DogProfileEngine.
     private func checkTemperature(_ sensor: SensorData) {
         guard let temp = sensor.temperature else { return }
 
@@ -365,32 +458,36 @@ final class AlertManager: ObservableObject {
 
         let record: AlertRecord?
 
-        if temp > thresholds.criticalHigh {
+        if temp > config.tempCriticalHigh {
+            let detail = profileAwareTempDetail(temp: temp, high: true, critical: true)
             record = AlertRecord(
                 type: .temperature, severity: .critical,
                 title: "Kennel overheating",
-                detail: String(format: "Temperature is %.1f°C — critical level. Check ventilation immediately.", temp),
+                detail: detail,
                 sensorValue: temp, unit: "°C"
             )
-        } else if temp > thresholds.warnHigh {
+        } else if temp > config.tempWarnHigh {
+            let detail = profileAwareTempDetail(temp: temp, high: true, critical: false)
             record = AlertRecord(
                 type: .temperature, severity: .warning,
                 title: "Kennel getting warm",
-                detail: String(format: "Temperature is %.1f°C — above comfortable range.", temp),
+                detail: detail,
                 sensorValue: temp, unit: "°C"
             )
-        } else if temp < thresholds.criticalLow {
+        } else if temp < config.tempCriticalLow {
+            let detail = profileAwareTempDetail(temp: temp, high: false, critical: true)
             record = AlertRecord(
                 type: .temperature, severity: .critical,
                 title: "Kennel too cold",
-                detail: String(format: "Temperature is %.1f°C — critical low. Provide warmth immediately.", temp),
+                detail: detail,
                 sensorValue: temp, unit: "°C"
             )
-        } else if temp < thresholds.warnLow {
+        } else if temp < config.tempWarnLow {
+            let detail = profileAwareTempDetail(temp: temp, high: false, critical: false)
             record = AlertRecord(
                 type: .temperature, severity: .warning,
                 title: "Kennel getting cold",
-                detail: String(format: "Temperature is %.1f°C — below comfortable range.", temp),
+                detail: detail,
                 sensorValue: temp, unit: "°C"
             )
         } else {
@@ -403,16 +500,114 @@ final class AlertManager: ObservableObject {
         }
     }
 
+    /// Builds a profile-aware temperature detail string.
+    private func profileAwareTempDetail(temp: Double, high: Bool, critical: Bool) -> String {
+        let base = String(format: "%.1f°C", temp)
+
+        switch config.operationalProfile {
+
+        case .youngPuppy:
+            let ageMonths = config.puppyAgeMonths ?? 2.0
+            if ageMonths < 1 {
+                // Neonatal: cannot thermoregulate at all (Merck Vet Manual)
+                return high
+                    ? "\(base) — Neonatal puppies cannot cool themselves. Remove heat source and cool kennel immediately."
+                    : "\(base) — Neonatal puppies are highly vulnerable to hypothermia. Add warmth immediately; target 29–32°C."
+            } else if ageMonths < 2 {
+                return high
+                    ? "\(base) — Puppy (4–8 weeks) is heat-sensitive. Reduce ambient temperature immediately."
+                    : "\(base) — Puppy (4–8 weeks) needs warmth; target 23–28°C to prevent hypothermia."
+            } else {
+                return high
+                    ? "\(base) — Puppy (2–4 months) is above comfortable range. Check ventilation."
+                    : "\(base) — Puppy (2–4 months) is below comfortable range. Provide additional warmth."
+            }
+
+        case .brachycephalic:
+            // BOAS dogs overheat rapidly and cannot pant efficiently
+            return high
+                ? "\(base) — Flat-faced breeds overheat rapidly and cannot pant efficiently. Act immediately."
+                : "\(base) — Temperature below comfortable range for this breed."
+
+        case .largeGiantDog:
+            return high
+                ? "\(base) — Large/giant dogs accumulate heat quickly. Check ventilation immediately."
+                : "\(base) — Below comfortable range. Provide additional warmth."
+
+        case .seniorSensitive:
+            return high
+                ? "\(base) — Senior dogs have reduced heat tolerance. Address immediately."
+                : "\(base) — Senior dogs are cold-sensitive. Provide warmth to prevent stress."
+
+        default:
+            return high
+                ? (critical
+                   ? "\(base) — Critical level. Check ventilation immediately."
+                   : "\(base) — Above comfortable range.")
+                : (critical
+                   ? "\(base) — Critical low. Provide warmth immediately."
+                   : "\(base) — Below comfortable range.")
+        }
+    }
+
+    // ── Sound ──────────────────────────────────────────────────────────────────
+    // Research: neonatal puppies (0–4 weeks) vocalize by crying/whimpering —
+    // they cannot bark. Sustained crying indicates cold, hunger, pain, or
+    // separation distress (source: Merck Veterinary Manual, Neonatal Puppy Care).
+    // Barking begins to develop around 3–4 weeks of age.
+    // For brachycephalic dogs, breathing sounds (stridor/stertor) are clinically
+    // relevant — the KY-038 microphone will pick these up as sound events.
     private func checkSound(_ sensor: SensorData) {
         guard sensor.barkDetected else { return }
 
         let now = Date()
-        if let last = lastBarkAlertDate, now.timeIntervalSince(last) < barkCooldown { return }
+        if let last = lastBarkAlertDate, now.timeIntervalSince(last) < effectiveBarkCooldown { return }
 
+        // ── Neonatal puppy (0–4 weeks): cry/whimper logic ────────────────────
+        if config.operationalProfile == .youngPuppy,
+           let age = config.puppyAgeMonths, age < 1 {
+            // Only alert on sustained vocalization — brief sounds are normal.
+            // Sustained cry in a neonate = potential cold/hunger/pain distress.
+            guard sensor.sustainedSound else { return }
+            append(AlertRecord(
+                type: .sound, severity: .critical,
+                title: "Puppy distress cry detected",
+                detail: "Sustained crying in a neonatal puppy may indicate: insufficient warmth (check temp 29–32°C), hunger, pain, or separation. Check immediately."
+            ))
+            lastBarkAlertDate = now
+            return
+        }
+
+        // ── soundAsStandaloneTrigger = false: only alert on sustained sound ──
+        // Applied to: transitional/juvenile puppies, brachycephalic dogs.
+        // Reason: puppy whimpers and brachycephalic breathing sounds generate
+        // frequent sensor events that are not true distress signals.
+        if !config.soundAsStandaloneTrigger {
+            guard sensor.sustainedSound else { return }
+
+            let detail: String
+            if config.operationalProfile == .brachycephalic {
+                detail = "Sustained sound detected. Flat-faced dogs may produce respiratory sounds (snoring/stertor) — verify breathing quality and check for overheating."
+            } else {
+                // Puppy 1–4 months
+                detail = "Sustained vocalization detected. Puppy may need attention — check warmth, feeding schedule, or social needs."
+            }
+            append(AlertRecord(type: .sound, severity: .warning, title: "Sustained vocalization", detail: detail))
+            lastBarkAlertDate = now
+            return
+        }
+
+        // ── Standard adult alert logic ────────────────────────────────────────
         let severity: AlertSeverity = sensor.sustainedSound ? .warning : .info
         let detail: String
+
         if sensor.sustainedSound {
-            detail = "Sustained barking detected — your dog may need attention."
+            switch config.operationalProfile {
+            case .seniorSensitive:
+                detail = "Sustained barking detected. Senior dogs may bark due to disorientation, pain, or anxiety — check on your dog."
+            default:
+                detail = "Sustained barking detected — your dog may need attention."
+            }
         } else if sensor.barkCount5s >= 3 {
             detail = "Repeated barking detected (\(sensor.barkCount5s) barks in 5 s)."
         } else {
@@ -423,22 +618,86 @@ final class AlertManager: ObservableObject {
         lastBarkAlertDate = now
     }
 
+    // ── Motion (edge-triggered) ────────────────────────────────────────────────
     private func checkMotion(_ sensor: SensorData) {
+        // Inactivity check runs on every update regardless of edge transition.
+        checkInactivity(sensor)
+
+        // Edge-triggered: fire only on false → true transition (motion started).
         let current = sensor.motionDetected
         defer { prevMotionDetected = current }
 
         guard current != prevMotionDetected, current else { return }
 
         let now = Date()
-        if let last = lastMotionAlertDate, now.timeIntervalSince(last) < motionCooldown { return }
+        if let last = lastMotionAlertDate, now.timeIntervalSince(last) < effectiveMotionCooldown { return }
 
         append(AlertRecord(
             type: .motion, severity: .info,
-            title: "Motion detected", detail: "Movement detected in the kennel area."
+            title: "Movement detected",
+            detail: "Activity detected in the kennel."
         ))
         lastMotionAlertDate = now
     }
 
+    // ── Inactivity ─────────────────────────────────────────────────────────────
+    // Research basis:
+    //   • Neonatal puppies sleep ~90 % of the day → inactivity is NORMAL; alerts disabled.
+    //   • Puppies 4–12 weeks sleep 18–20 h/day → long naps are expected (high threshold).
+    //   • Adult dogs sleep 12–14 h/day; extended inactivity during daytime warrants a check.
+    //   • Brachycephalic dogs are at risk of BOAS during rest → lower threshold.
+    //   • Senior dogs sleep more than adults; but sudden lethargy may signal illness.
+    // (Sources: Merck Vet Manual; BOAS clinical studies; canine geriatric care guidelines)
+    private func checkInactivity(_ sensor: SensorData) {
+        let threshold = config.inactiveAlertAfterSeconds
+        guard threshold > 0 else { return }  // 0 = disabled (neonatal profile)
+
+        guard let secondsSince = sensor.secondsSinceMotion,
+              secondsSince >= threshold else { return }
+
+        let now = Date()
+        if let last = lastInactivityAlertDate,
+           now.timeIntervalSince(last) < inactivityAlertCooldown { return }
+
+        let minutes = secondsSince / 60
+        let hours   = minutes / 60
+        let timeStr = hours > 0
+            ? "\(hours) h \(minutes % 60) min"
+            : "\(minutes) min"
+
+        let (title, detail, severity): (String, String, AlertSeverity)
+
+        switch config.operationalProfile {
+
+        case .youngPuppy:
+            // Puppy 1–4 months: long sleep is normal but worth a gentle check.
+            title    = "Extended rest period"
+            detail   = "No movement for \(timeStr). Puppies sleep 18–20 h/day — verify your puppy is sleeping comfortably and breathing normally."
+            severity = .info
+
+        case .brachycephalic:
+            // BOAS risk during prolonged rest: check breathing quality.
+            title    = "Extended inactivity"
+            detail   = "No movement for \(timeStr). Flat-faced dogs can experience respiratory difficulty during rest. Verify breathing is regular and the kennel is cool."
+            severity = .warning
+
+        case .seniorSensitive:
+            // Senior dogs may experience sudden health deterioration.
+            title    = "Extended inactivity"
+            detail   = "No movement for \(timeStr). Senior dogs can show sudden health changes — consider checking on your dog, especially if this is unusual behaviour."
+            severity = .warning
+
+        default:
+            title    = "Extended inactivity"
+            detail   = "No movement detected for \(timeStr). Your dog may be resting — check in if this seems unusual."
+            severity = .info
+        }
+
+        append(AlertRecord(type: .motion, severity: severity, title: title, detail: detail))
+        lastInactivityAlertDate = now
+    }
+
+    // ── Light ──────────────────────────────────────────────────────────────────
     private func checkLight(_ sensor: SensorData) {
         let current = sensor.lightDetected
         defer { prevLightDetected = current }

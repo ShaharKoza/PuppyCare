@@ -62,27 +62,58 @@ final class ProfileStore: ObservableObject {
             .store(in: &cancellables)
     }
 
-    // MARK: - Threshold sync
+    // MARK: - Alert config sync
 
     private func setupThresholdSync() {
+        // Watch ALL profile fields that affect alert behaviour, not just temp thresholds.
         $profile
-            .map { ($0.tempWarnHigh, $0.tempCriticalHigh, $0.tempWarnLow, $0.tempCriticalLow) }
-            .removeDuplicates { $0 == $1 }
             .dropFirst()
-            .sink { [weak self] _ in
+            .debounce(for: .milliseconds(500), scheduler: DispatchQueue.main)
+            .sink { [weak self] updatedProfile in
                 guard let self else { return }
-                self.syncThresholds(profile: self.profile)
+                self.syncAlertConfig(profile: updatedProfile)
             }
             .store(in: &cancellables)
     }
 
-    private func syncThresholds(profile: DogProfile) {
-        AlertManager.shared.updateThresholds(
+    /// Pushes the full research-based alert configuration to AlertManager.
+    /// Called on launch, on every profile change (debounced), and after applyDerivedConfiguration.
+    private func syncAlertConfig(profile: DogProfile) {
+        // Resolve the operational profile — prefer explicit user selection over auto-derive.
+        let opProfile = profile.selectedOperationalProfile
+            ?? DogProfileEngine.deriveOperationalProfile(from: profile)
+
+        // Use stored sensor defaults when available; fall back to deriving live.
+        let defaults = profile.derivedSensorDefaults
+            ?? DogProfileEngine.deriveSensorDefaults(
+                operationalProfile: opProfile,
+                sizeGroup:          profile.sizeGroup,
+                headType:           profile.headType,
+                coatType:           profile.coatType,
+                specialCondition:   profile.specialCondition,
+                ageMonths:          profile.ageMonthsValue ?? 12
+            )
+
+        // Determine puppy age for neonatal-specific alert messaging.
+        let puppyAgeMonths: Double? = opProfile == .youngPuppy ? profile.ageMonthsValue : nil
+
+        AlertManager.shared.updateAlertConfig(
             warnHigh:     profile.tempWarnHigh,
             criticalHigh: profile.tempCriticalHigh,
             warnLow:      profile.tempWarnLow,
-            criticalLow:  profile.tempCriticalLow
+            criticalLow:  profile.tempCriticalLow,
+            soundSensitivity:         defaults.soundSensitivityLevel,
+            soundAsStandaloneTrigger: defaults.soundAsStandaloneTrigger,
+            motionSensitivity:          defaults.motionSensitivityLevel,
+            inactiveAlertAfterMinutes:  defaults.lowActivityAlertAfterMinutes,
+            operationalProfile: opProfile,
+            puppyAgeMonths:     puppyAgeMonths
         )
+    }
+
+    // Keep legacy shim name for any call sites not yet migrated.
+    private func syncThresholds(profile: DogProfile) {
+        syncAlertConfig(profile: profile)
     }
 
     // MARK: - Normalisation + one-time migration
@@ -173,19 +204,22 @@ final class ProfileStore: ObservableObject {
     /// Applies auto-derived sensor thresholds and health reminders to the live profile.
     /// Existing manual overrides are preserved if manualOverridesEnabled is true.
     func applyDerivedConfiguration(_ config: DogProfileEngine.DerivedConfiguration) {
-        // Sensor thresholds — only apply if the user has not manually overridden them
+        // Temperature thresholds — only apply if the user has not manually overridden them
         if !profile.manualOverridesEnabled {
             profile.tempWarnHigh     = config.sensorDefaults.tempWarnHigh
             profile.tempCriticalHigh = config.sensorDefaults.tempCriticalHigh
             profile.tempWarnLow      = config.sensorDefaults.tempWarnLow
             profile.tempCriticalLow  = config.sensorDefaults.tempCriticalLow
         }
-        // Always update operational profile, reminders, and completion flag
+        // Always update operational profile, reminders, sensor defaults, and completion flag.
+        // derivedSensorDefaults is persisted so AlertManager can be fully configured on
+        // subsequent launches without re-running the engine.
         profile.selectedOperationalProfile = config.operationalProfile
         profile.derivedHealthReminders     = config.healthReminders
+        profile.derivedSensorDefaults      = config.sensorDefaults
         profile.hasCompletedProfileSetup   = true
 
-        syncThresholds(profile: profile)
+        syncAlertConfig(profile: profile)
         saveImmediately()
     }
 

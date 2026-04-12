@@ -156,6 +156,11 @@ struct DogProfile: Codable {
     /// Auto-configured health reminders — computed and saved by DogProfileEngine.
     var derivedHealthReminders: DerivedHealthReminders?
 
+    /// Auto-configured sensor defaults (sound/motion sensitivity, inactivity threshold)
+    /// derived by DogProfileEngine. Persisted so AlertManager can be fully configured
+    /// on launch without needing to re-run the engine.
+    var derivedSensorDefaults: DerivedSensorDefaults?
+
     /// True after the user has completed the new auto-config setup flow at least once.
     var hasCompletedProfileSetup: Bool = false
 
@@ -195,6 +200,7 @@ struct DogProfile: Codable {
         case birthDate
         case sizeGroup, headType, coatType, specialCondition, lifestyleFlags, regionRisk
         case derivedHealthReminders
+        case derivedSensorDefaults
         case hasCompletedProfileSetup, manualOverridesEnabled
     }
 
@@ -221,6 +227,7 @@ struct DogProfile: Codable {
         lifestyleFlags: [LifestyleFlag] = [],
         regionRisk: RegionRisk = .centralOrSouth,
         derivedHealthReminders: DerivedHealthReminders? = nil,
+        derivedSensorDefaults: DerivedSensorDefaults? = nil,
         hasCompletedProfileSetup: Bool = false,
         manualOverridesEnabled: Bool = false
     ) {
@@ -245,6 +252,7 @@ struct DogProfile: Codable {
         self.coatType = coatType; self.specialCondition = specialCondition
         self.lifestyleFlags = lifestyleFlags; self.regionRisk = regionRisk
         self.derivedHealthReminders = derivedHealthReminders
+        self.derivedSensorDefaults  = derivedSensorDefaults
         self.hasCompletedProfileSetup = hasCompletedProfileSetup
         self.manualOverridesEnabled = manualOverridesEnabled
     }
@@ -287,7 +295,8 @@ struct DogProfile: Codable {
         specialCondition   = (try? c.decode(SpecialCondition.self, forKey: .specialCondition)) ?? .none
         lifestyleFlags     = (try? c.decode([LifestyleFlag].self,  forKey: .lifestyleFlags))   ?? []
         regionRisk         = (try? c.decode(RegionRisk.self,       forKey: .regionRisk))       ?? .centralOrSouth
-        derivedHealthReminders  = try? c.decodeIfPresent(DerivedHealthReminders.self, forKey: .derivedHealthReminders)
+        derivedHealthReminders  = try? c.decodeIfPresent(DerivedHealthReminders.self,  forKey: .derivedHealthReminders)
+        derivedSensorDefaults   = try? c.decodeIfPresent(DerivedSensorDefaults.self,   forKey: .derivedSensorDefaults)
         hasCompletedProfileSetup = (try? c.decode(Bool.self,       forKey: .hasCompletedProfileSetup)) ?? false
         manualOverridesEnabled   = (try? c.decode(Bool.self,       forKey: .manualOverridesEnabled))   ?? false
     }

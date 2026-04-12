@@ -31,7 +31,8 @@ enum DogProfileEngine {
                                              sizeGroup:         profile.sizeGroup,
                                              headType:          profile.headType,
                                              coatType:          profile.coatType,
-                                             specialCondition:  profile.specialCondition)
+                                             specialCondition:  profile.specialCondition,
+                                             ageMonths:         profile.ageMonthsValue ?? 12)
         let reminders  = deriveHealthReminders(birthDate:       profile.birthDate,
                                               operationalProfile: opProfile,
                                               lifestyleFlags:   profile.lifestyleFlags,
@@ -93,10 +94,22 @@ enum DogProfileEngine {
         sizeGroup:          SizeGroup,
         headType:           HeadType,
         coatType:           CoatType,
-        specialCondition:   SpecialCondition
+        specialCondition:   SpecialCondition,
+        ageMonths:          Double = 12    // used for intra-puppy fine-graining
     ) -> DerivedSensorDefaults {
 
         // ── Base thresholds by operational profile ──────────────────────────
+        //
+        // Temperature values are AMBIENT KENNEL temperature (°C), not body temp.
+        //
+        // Research sources:
+        //   • Merck Veterinary Manual — Neonatal Puppy Care (thermoregulation
+        //     capacity by week; optimal nest temperature 29–32 °C for neonates)
+        //   • AVMA — Guidelines for the Euthanasia of Animals (housing temp refs)
+        //   • Brachycephalic Obstructive Airway Syndrome (BOAS) clinical literature
+        //     (Packer et al., 2015; Liu et al., 2016) — heat intolerance at >24 °C
+        //   • Canine geriatric care references — reduced thermoregulatory efficiency
+        //
         var warnHigh:     Double
         var criticalHigh: Double
         var warnLow:      Double
@@ -109,49 +122,107 @@ enum DogProfileEngine {
         switch operationalProfile {
 
         case .youngPuppy:
-            // Conservative all around — limited thermoregulation
-            warnHigh = 26; criticalHigh = 29
-            warnLow  = 18; criticalLow  = 15
-            soundLevel  = .standard
-            soundAlone  = false   // puppies whimper; don't alert on sound alone
-            motionLevel = .high
-            inactiveMin = 30
+            // Puppies cannot regulate body temperature until ~3–4 weeks of age.
+            // We sub-divide into three developmental stages with independent thresholds:
+
+            if ageMonths < 1 {
+                // ── Neonatal (0–4 weeks) ────────────────────────────────────────
+                // Thermoregulation: essentially absent; fully dependent on ambient heat.
+                // Optimal nest temp: 29–32 °C (Merck Vet Manual).
+                // Critical below 26 °C → hypothermia risk within minutes.
+                // Critical above 35 °C → heat stroke risk (no panting reflex yet).
+                // Sound: neonates whimper/cry — they cannot bark.
+                //   Sustained cry = distress (cold / hunger / pain / separation).
+                //   Brief sounds are normal; standalone bark events are not meaningful.
+                // Activity: sleep ~90 % of the day (≈21 h). Long inactivity is NORMAL.
+                //   inactiveMin = 0 → DISABLES inactivity alerting for this stage.
+                warnHigh = 32; criticalHigh = 35
+                warnLow  = 28; criticalLow  = 25
+                soundLevel  = .high
+                soundAlone  = false   // cry not bark; KY-038 events alone are unreliable
+                motionLevel = .high
+                inactiveMin = 0       // disabled — sleeping 90 % is normal
+
+            } else if ageMonths < 2 {
+                // ── Transitional (4–8 weeks / 1–2 months) ──────────────────────
+                // Thermoregulation: beginning to develop; still highly dependent.
+                // Optimal ambient: 23–28 °C (gradual weaning from nest temperature).
+                // Can now start to shiver (cold defense) but sweating/panting immature.
+                // Sound: proto-barks emerging ~3–4 weeks; whimpers still dominant.
+                //   Standalone bark events are still unreliable distress signals.
+                // Activity: sleep 18–20 h/day. Alert threshold set high (3 h).
+                warnHigh = 29; criticalHigh = 33
+                warnLow  = 22; criticalLow  = 18
+                soundLevel  = .high
+                soundAlone  = false   // bark reflex developing; don't alert on sound alone
+                motionLevel = .high
+                inactiveMin = 180     // 3 h — long naps are developmentally normal
+
+            } else {
+                // ── Juvenile puppy (2–4 months) ─────────────────────────────────
+                // Thermoregulation: improving but still more sensitive than adults.
+                // Optimal ambient: 18–26 °C. Closer to adult ranges.
+                // Sound: bark developing; still more sensitive than adult dogs.
+                //   soundAlone remains false — puppies whimper frequently.
+                // Activity: sleep ~16–18 h/day. 2-hour inactivity threshold.
+                warnHigh = 26; criticalHigh = 30
+                warnLow  = 18; criticalLow  = 15
+                soundLevel  = .standard
+                soundAlone  = false   // developmentally frequent whimpers — avoid false alerts
+                motionLevel = .high
+                inactiveMin = 120     // 2 h — puppies still nap frequently
+            }
 
         case .smallDog:
-            // Tighter cold thresholds; standard heat
+            // Small dogs (<10 kg) lose heat faster relative to body mass (higher
+            // surface-area-to-volume ratio) → tighter cold thresholds.
+            // Standard heat thresholds apply.
             warnHigh = 28; criticalHigh = 32
             warnLow  = 15; criticalLow  = 10
             soundLevel  = .standard
             soundAlone  = true
             motionLevel = .standard
-            inactiveMin = 60
+            inactiveMin = 60    // 1 h — healthy adult; flag unexpected daytime lethargy
 
         case .largeGiantDog:
-            // Earlier heat warning; more heat-mass load
+            // Large/giant dogs (>25 kg) generate more body heat per unit of
+            // surface area → earlier warning on the high end.
+            // More cold-tolerant than small dogs.
             warnHigh = 26; criticalHigh = 30
             warnLow  = 10; criticalLow  = 6
             soundLevel  = .standard
             soundAlone  = true
             motionLevel = .standard
-            inactiveMin = 90
+            inactiveMin = 90    // 1.5 h — large dogs rest more; give extra margin
 
         case .brachycephalic:
-            // Strictest heat defaults in the system
+            // Brachycephalic Obstructive Airway Syndrome (BOAS) severely limits
+            // panting efficiency — the primary heat-dissipation mechanism in dogs.
+            // Clinical studies (Packer et al., 2015) show heat-related illness at
+            // ambient temps that are safe for other breeds.
+            // strictest heat defaults in the system (warnHigh 24, criticalHigh 27).
+            // Sound sensitivity is HIGH: breathing sounds (stertor/stridor)
+            //   captured by the KY-038 microphone are clinically meaningful.
+            //   soundAlone = false: respiratory sounds ≠ bark threshold events.
+            // Inactivity: 45 min — BOAS complications can develop during rest.
             warnHigh = 24; criticalHigh = 27
             warnLow  = 12; criticalLow  = 8
-            soundLevel  = .high   // breathing sounds matter more
-            soundAlone  = false   // breathing patterns, not bark count
+            soundLevel  = .high
+            soundAlone  = false   // breathing sounds, not bark count
             motionLevel = .high
-            inactiveMin = 45
+            inactiveMin = 45    // shorter threshold — BOAS risk during prolonged rest
 
         case .seniorSensitive:
-            // Conservative both directions; high motion sensitivity
+            // Senior dogs (7+ years) show reduced thermoregulatory efficiency.
+            // Both heat and cold tolerance are reduced.
+            // Higher sound and motion sensitivity: unusual vocalization or
+            // prolonged inactivity may signal pain, disorientation, or illness.
             warnHigh = 26; criticalHigh = 30
             warnLow  = 14; criticalLow  = 10
             soundLevel  = .high
             soundAlone  = true
             motionLevel = .high
-            inactiveMin = 45
+            inactiveMin = 45    // senior dogs sleep more; 45 min flags true lethargy
         }
 
         // ── Coat adjustments ─────────────────────────────────────────────────
