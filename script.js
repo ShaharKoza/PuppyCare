@@ -103,8 +103,8 @@
 function copyInfo() {
   const raw = `{
   "project"      :  "PuppyCare — Smart Kennel Monitoring for Puppies",
-  "author"       :  "Shahar Koza",
-  "institution"  :  "Reichman University",
+  "authors"      :  "Shahar Koza & Daniella Shemesh",
+  "institution"  :  "Ono Academic College",
   "year"         :  2026,
   "platform"     :  "iOS 16+ (SwiftUI) + Raspberry Pi",
   "stack"        :  "SwiftUI · Firebase RTDB · FCM · Node.js · Python",
