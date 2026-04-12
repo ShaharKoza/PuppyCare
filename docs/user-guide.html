@@ -504,14 +504,15 @@ ul.ul li::marker{color:var(--acc)}
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
     </div>
     <div style="font-size:13px;color:var(--acc-d);line-height:1.6">
-      <strong>Alert Thresholds — Derived from App Code</strong><br>
-      Values below reflect the actual thresholds in <code>DogProfileEngine.swift</code>. They are automatically applied when you set up your dog profile.
+      <strong>Alert Thresholds — Research-Based &amp; Age-Aware</strong><br>
+      Values are sourced from <strong>Merck Veterinary Manual</strong>, AVMA guidelines, BOAS clinical literature (Roedler 2013, Bruchim 2017, Liu 2016), and canine behavioural studies (Zanghi 2013; Scott &amp; Fuller 1965). They are automatically applied from <code>DogProfileEngine.swift</code> when you complete profile setup.
     </div>
   </div>
 
-  <!-- Temperature by Profile -->
+  <!-- Temperature by Profile — Research-Based -->
   <div class="card" style="margin-bottom:.85rem">
     <div class="sub">Temperature Thresholds by Operational Profile</div>
+    <p style="font-size:12px;color:var(--t3);margin-bottom:.75rem">All values are <em>ambient kennel temperature</em> (°C), not body temperature. Young Puppy is sub-divided into three developmental stages.</p>
     <div style="overflow-x:auto">
     <table style="width:100%;border-collapse:collapse;font-size:12.5px">
       <thead><tr style="background:var(--bg)">
@@ -520,123 +521,216 @@ ul.ul li::marker{color:var(--acc)}
         <th style="padding:.55rem .8rem;text-align:left;font-size:11px;font-weight:700;color:#C0392B">Critical High</th>
         <th style="padding:.55rem .8rem;text-align:left;font-size:11px;font-weight:700;color:#1A5276">Warn Low</th>
         <th style="padding:.55rem .8rem;text-align:left;font-size:11px;font-weight:700;color:#C0392B">Critical Low</th>
+        <th style="padding:.55rem .8rem;text-align:left;font-size:11px;font-weight:700;color:var(--t3)">Source</th>
       </tr></thead>
       <tbody>
-        <tr style="border-bottom:1px solid rgba(0,0,0,.05)">
-          <td style="padding:.65rem .8rem;font-weight:600">Young Puppy (&lt;3 months)</td>
-          <td style="padding:.65rem .8rem"><span style="background:#FBF0E0;color:#8B5A1A;font-size:11.5px;padding:2px 7px;border-radius:10px;font-weight:600">&gt;26°C</span></td>
-          <td style="padding:.65rem .8rem"><span style="background:#FEE8E8;color:#C0392B;font-size:11.5px;padding:2px 7px;border-radius:10px;font-weight:600">&gt;29°C</span></td>
+        <tr style="border-bottom:1px solid rgba(0,0,0,.05);background:#FFFBF5">
+          <td style="padding:.65rem .8rem;font-weight:600">🐶 Neonatal Puppy<br><span style="font-weight:400;font-size:11px;color:var(--t3)">0–4 weeks</span></td>
+          <td style="padding:.65rem .8rem"><span style="background:#FBF0E0;color:#8B5A1A;font-size:11.5px;padding:2px 7px;border-radius:10px;font-weight:600">&gt;33°C</span></td>
+          <td style="padding:.65rem .8rem"><span style="background:#FEE8E8;color:#C0392B;font-size:11.5px;padding:2px 7px;border-radius:10px;font-weight:600">&gt;34°C</span></td>
+          <td style="padding:.65rem .8rem"><span style="background:#EBF5FB;color:#1A5276;font-size:11.5px;padding:2px 7px;border-radius:10px;font-weight:600">&lt;29°C</span></td>
+          <td style="padding:.65rem .8rem"><span style="background:#FEE8E8;color:#C0392B;font-size:11.5px;padding:2px 7px;border-radius:10px;font-weight:600">&lt;26°C</span></td>
+          <td style="padding:.65rem .8rem;font-size:11px;color:var(--t3)">Merck Vet Manual; optimal nest 29–32°C</td>
+        </tr>
+        <tr style="border-bottom:1px solid rgba(0,0,0,.05);background:#FFFBF5">
+          <td style="padding:.65rem .8rem;font-weight:600">🐶 Transitional Puppy<br><span style="font-weight:400;font-size:11px;color:var(--t3)">4–8 weeks (1–2 months)</span></td>
+          <td style="padding:.65rem .8rem"><span style="background:#FBF0E0;color:#8B5A1A;font-size:11.5px;padding:2px 7px;border-radius:10px;font-weight:600">&gt;27°C</span></td>
+          <td style="padding:.65rem .8rem"><span style="background:#FEE8E8;color:#C0392B;font-size:11.5px;padding:2px 7px;border-radius:10px;font-weight:600">&gt;30°C</span></td>
           <td style="padding:.65rem .8rem"><span style="background:#EBF5FB;color:#1A5276;font-size:11.5px;padding:2px 7px;border-radius:10px;font-weight:600">&lt;18°C</span></td>
           <td style="padding:.65rem .8rem"><span style="background:#FEE8E8;color:#C0392B;font-size:11.5px;padding:2px 7px;border-radius:10px;font-weight:600">&lt;15°C</span></td>
+          <td style="padding:.65rem .8rem;font-size:11px;color:var(--t3)">Merck: optimal 21–24°C</td>
+        </tr>
+        <tr style="border-bottom:1px solid rgba(0,0,0,.05);background:#FFFBF5">
+          <td style="padding:.65rem .8rem;font-weight:600">🐶 Juvenile Puppy<br><span style="font-weight:400;font-size:11px;color:var(--t3)">2–4 months</span></td>
+          <td style="padding:.65rem .8rem"><span style="background:#FBF0E0;color:#8B5A1A;font-size:11.5px;padding:2px 7px;border-radius:10px;font-weight:600">&gt;27°C</span></td>
+          <td style="padding:.65rem .8rem"><span style="background:#FEE8E8;color:#C0392B;font-size:11.5px;padding:2px 7px;border-radius:10px;font-weight:600">&gt;30°C</span></td>
+          <td style="padding:.65rem .8rem"><span style="background:#EBF5FB;color:#1A5276;font-size:11.5px;padding:2px 7px;border-radius:10px;font-weight:600">&lt;15°C</span></td>
+          <td style="padding:.65rem .8rem"><span style="background:#FEE8E8;color:#C0392B;font-size:11.5px;padding:2px 7px;border-radius:10px;font-weight:600">&lt;12°C</span></td>
+          <td style="padding:.65rem .8rem;font-size:11px;color:var(--t3)">AVMA/ASPCA: optimal 18–24°C</td>
         </tr>
         <tr style="border-bottom:1px solid rgba(0,0,0,.05)">
-          <td style="padding:.65rem .8rem;font-weight:600">Small / Medium Dog</td>
-          <td style="padding:.65rem .8rem"><span style="background:#FBF0E0;color:#8B5A1A;font-size:11.5px;padding:2px 7px;border-radius:10px;font-weight:600">&gt;28°C</span></td>
+          <td style="padding:.65rem .8rem;font-weight:600">🐩 Small Dog</td>
+          <td style="padding:.65rem .8rem"><span style="background:#FBF0E0;color:#8B5A1A;font-size:11.5px;padding:2px 7px;border-radius:10px;font-weight:600">&gt;27°C</span></td>
           <td style="padding:.65rem .8rem"><span style="background:#FEE8E8;color:#C0392B;font-size:11.5px;padding:2px 7px;border-radius:10px;font-weight:600">&gt;32°C</span></td>
           <td style="padding:.65rem .8rem"><span style="background:#EBF5FB;color:#1A5276;font-size:11.5px;padding:2px 7px;border-radius:10px;font-weight:600">&lt;15°C</span></td>
           <td style="padding:.65rem .8rem"><span style="background:#FEE8E8;color:#C0392B;font-size:11.5px;padding:2px 7px;border-radius:10px;font-weight:600">&lt;10°C</span></td>
+          <td style="padding:.65rem .8rem;font-size:11px;color:var(--t3)">Reiter &amp; Gaschen, JAVMA 2011; TNZ 20–25°C</td>
         </tr>
         <tr style="border-bottom:1px solid rgba(0,0,0,.05)">
-          <td style="padding:.65rem .8rem;font-weight:600">Large / Giant Dog</td>
-          <td style="padding:.65rem .8rem"><span style="background:#FBF0E0;color:#8B5A1A;font-size:11.5px;padding:2px 7px;border-radius:10px;font-weight:600">&gt;26°C</span></td>
-          <td style="padding:.65rem .8rem"><span style="background:#FEE8E8;color:#C0392B;font-size:11.5px;padding:2px 7px;border-radius:10px;font-weight:600">&gt;30°C</span></td>
+          <td style="padding:.65rem .8rem;font-weight:600">🦮 Large / Giant Dog</td>
+          <td style="padding:.65rem .8rem"><span style="background:#FBF0E0;color:#8B5A1A;font-size:11.5px;padding:2px 7px;border-radius:10px;font-weight:600">&gt;24°C</span></td>
+          <td style="padding:.65rem .8rem"><span style="background:#FEE8E8;color:#C0392B;font-size:11.5px;padding:2px 7px;border-radius:10px;font-weight:600">&gt;28°C</span></td>
           <td style="padding:.65rem .8rem"><span style="background:#EBF5FB;color:#1A5276;font-size:11.5px;padding:2px 7px;border-radius:10px;font-weight:600">&lt;10°C</span></td>
           <td style="padding:.65rem .8rem"><span style="background:#FEE8E8;color:#C0392B;font-size:11.5px;padding:2px 7px;border-radius:10px;font-weight:600">&lt;6°C</span></td>
+          <td style="padding:.65rem .8rem;font-size:11px;color:var(--t3)">Merck; NRC 2006; TNZ 15–22°C</td>
         </tr>
         <tr style="border-bottom:1px solid rgba(0,0,0,.05)">
-          <td style="padding:.65rem .8rem;font-weight:600">Brachycephalic</td>
+          <td style="padding:.65rem .8rem;font-weight:600">😤 Brachycephalic</td>
           <td style="padding:.65rem .8rem"><span style="background:#FBF0E0;color:#8B5A1A;font-size:11.5px;padding:2px 7px;border-radius:10px;font-weight:600">&gt;24°C</span></td>
-          <td style="padding:.65rem .8rem"><span style="background:#FEE8E8;color:#C0392B;font-size:11.5px;padding:2px 7px;border-radius:10px;font-weight:600">&gt;27°C</span></td>
-          <td style="padding:.65rem .8rem"><span style="background:#EBF5FB;color:#1A5276;font-size:11.5px;padding:2px 7px;border-radius:10px;font-weight:600">&lt;12°C</span></td>
-          <td style="padding:.65rem .8rem"><span style="background:#FEE8E8;color:#C0392B;font-size:11.5px;padding:2px 7px;border-radius:10px;font-weight:600">&lt;8°C</span></td>
+          <td style="padding:.65rem .8rem"><span style="background:#FEE8E8;color:#C0392B;font-size:11.5px;padding:2px 7px;border-radius:10px;font-weight:600">&gt;26°C</span></td>
+          <td style="padding:.65rem .8rem"><span style="background:#EBF5FB;color:#1A5276;font-size:11.5px;padding:2px 7px;border-radius:10px;font-weight:600">&lt;18°C</span></td>
+          <td style="padding:.65rem .8rem"><span style="background:#FEE8E8;color:#C0392B;font-size:11.5px;padding:2px 7px;border-radius:10px;font-weight:600">&lt;14°C</span></td>
+          <td style="padding:.65rem .8rem;font-size:11px;color:var(--t3)">Bruchim 2017; Roedler 2013; safe 18–22°C</td>
         </tr>
         <tr>
-          <td style="padding:.65rem .8rem;font-weight:600">Senior / Sensitive</td>
+          <td style="padding:.65rem .8rem;font-weight:600">🐕‍🦺 Senior / Sensitive</td>
           <td style="padding:.65rem .8rem"><span style="background:#FBF0E0;color:#8B5A1A;font-size:11.5px;padding:2px 7px;border-radius:10px;font-weight:600">&gt;26°C</span></td>
           <td style="padding:.65rem .8rem"><span style="background:#FEE8E8;color:#C0392B;font-size:11.5px;padding:2px 7px;border-radius:10px;font-weight:600">&gt;30°C</span></td>
-          <td style="padding:.65rem .8rem"><span style="background:#EBF5FB;color:#1A5276;font-size:11.5px;padding:2px 7px;border-radius:10px;font-weight:600">&lt;14°C</span></td>
-          <td style="padding:.65rem .8rem"><span style="background:#FEE8E8;color:#C0392B;font-size:11.5px;padding:2px 7px;border-radius:10px;font-weight:600">&lt;10°C</span></td>
+          <td style="padding:.65rem .8rem"><span style="background:#EBF5FB;color:#1A5276;font-size:11.5px;padding:2px 7px;border-radius:10px;font-weight:600">&lt;18°C</span></td>
+          <td style="padding:.65rem .8rem"><span style="background:#FEE8E8;color:#C0392B;font-size:11.5px;padding:2px 7px;border-radius:10px;font-weight:600">&lt;14°C</span></td>
+          <td style="padding:.65rem .8rem;font-size:11px;color:var(--t3)">Laflamme 2005; AVMA Senior Guidelines</td>
         </tr>
       </tbody>
     </table>
     </div>
+    <p style="font-size:11.5px;color:var(--t3);margin-top:.75rem">Coat modifiers applied automatically: short coat → cold thresholds raised; thick double coat → heat thresholds lowered. Special conditions (heat/cold-sensitive, post-surgery) apply additional adjustments.</p>
   </div>
 
-  <!-- Coat & Condition modifiers -->
+  <!-- Inactivity Thresholds -->
   <div class="card" style="margin-bottom:.85rem">
-    <div class="sub">Coat Type &amp; Special Condition Modifiers</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.85rem">
-      <div style="background:var(--bg);border-radius:var(--r-sm);padding:1rem 1.1rem">
-        <div style="font-size:13px;font-weight:700;color:var(--t1);margin-bottom:.6rem">Coat Type</div>
-        <ul style="font-size:12.5px;color:var(--t2);line-height:1.9;padding-left:1rem">
-          <li><strong>Short coat</strong> — warnLow raised to min 16°C, criticalLow to min 12°C</li>
-          <li><strong>Thick-double coat</strong> — warnHigh capped at 26°C, criticalHigh at 30°C</li>
-          <li><strong>Regular coat</strong> — no adjustment applied</li>
-        </ul>
-      </div>
-      <div style="background:var(--bg);border-radius:var(--r-sm);padding:1rem 1.1rem">
-        <div style="font-size:13px;font-weight:700;color:var(--t1);margin-bottom:.6rem">Special Conditions</div>
-        <ul style="font-size:12.5px;color:var(--t2);line-height:1.9;padding-left:1rem">
-          <li><strong>Heat-sensitive</strong> — warnHigh ≤24°C, criticalHigh ≤28°C</li>
-          <li><strong>Cold-sensitive</strong> — warnLow ≥16°C, criticalLow ≥13°C</li>
-          <li><strong>Post-surgery / Chronic</strong> — all thresholds tightened + high motion sensitivity</li>
-        </ul>
-      </div>
-    </div>
-  </div>
-
-  <!-- Sound & Alert Quick Ref -->
-  <div class="card" style="margin-bottom:.85rem">
-    <div class="sub">Quick Reference — Alert Triggers</div>
+    <div class="sub">Inactivity Alert Thresholds</div>
+    <p style="font-size:12px;color:var(--t3);margin-bottom:.75rem">
+      Based on sleep research: neonates sleep ~90% of the day (Merck); puppies 4–12 weeks sleep 18–20 h/day (Zanghi et al. 2013); adults 12–14 h; seniors 14–16 h.
+    </p>
     <div style="overflow-x:auto">
     <table style="width:100%;border-collapse:collapse;font-size:12.5px">
       <thead><tr style="background:var(--bg)">
-        <th style="padding:.55rem .8rem;text-align:left;font-size:11px;font-weight:700;color:var(--t3)">Sensor</th>
-        <th style="padding:.55rem .8rem;text-align:left;font-size:11px;font-weight:700;color:var(--t3)">Condition</th>
-        <th style="padding:.55rem .8rem;text-align:left;font-size:11px;font-weight:700;color:var(--t3)">Severity</th>
-        <th style="padding:.55rem .8rem;text-align:left;font-size:11px;font-weight:700;color:var(--t3)">Cooldown</th>
+        <th style="padding:.5rem .8rem;text-align:left;font-size:11px;font-weight:700;color:var(--t3)">Profile</th>
+        <th style="padding:.5rem .8rem;text-align:left;font-size:11px;font-weight:700;color:var(--t3)">Inactivity Alert After</th>
+        <th style="padding:.5rem .8rem;text-align:left;font-size:11px;font-weight:700;color:var(--t3)">Severity</th>
+        <th style="padding:.5rem .8rem;text-align:left;font-size:11px;font-weight:700;color:var(--t3)">Research Basis</th>
       </tr></thead>
       <tbody>
         <tr style="border-bottom:1px solid rgba(0,0,0,.05)">
-          <td style="padding:.65rem .8rem;font-weight:600">Temperature</td>
-          <td style="padding:.65rem .8rem">Exceeds warnHigh or below warnLow</td>
-          <td style="padding:.65rem .8rem"><span style="background:#FBF0E0;color:#8B5A1A;font-size:11.5px;padding:2px 7px;border-radius:10px;font-weight:600">Warning</span></td>
-          <td style="padding:.65rem .8rem">5 min</td>
+          <td style="padding:.6rem .8rem;font-weight:600">Neonatal (0–4 wks)</td>
+          <td style="padding:.6rem .8rem"><span style="background:#E8F8E8;color:#1E7E34;font-size:11.5px;padding:2px 7px;border-radius:10px;font-weight:600">Disabled</span></td>
+          <td style="padding:.6rem .8rem;font-size:11.5px;color:var(--t3)">—</td>
+          <td style="padding:.6rem .8rem;font-size:11px;color:var(--t3)">Sleep ~90% of day; inactivity is normal</td>
         </tr>
         <tr style="border-bottom:1px solid rgba(0,0,0,.05)">
-          <td style="padding:.65rem .8rem;font-weight:600">Temperature</td>
-          <td style="padding:.65rem .8rem">Exceeds criticalHigh or below criticalLow</td>
-          <td style="padding:.65rem .8rem"><span style="background:#FEE8E8;color:#C0392B;font-size:11.5px;padding:2px 7px;border-radius:10px;font-weight:600">Critical</span></td>
-          <td style="padding:.65rem .8rem">5 min</td>
+          <td style="padding:.6rem .8rem;font-weight:600">Transitional (4–8 wks)</td>
+          <td style="padding:.6rem .8rem;font-weight:600">180 min</td>
+          <td style="padding:.6rem .8rem"><span style="background:#EAF3FB;color:#2471A3;font-size:11px;padding:2px 7px;border-radius:10px;font-weight:600">Info</span></td>
+          <td style="padding:.6rem .8rem;font-size:11px;color:var(--t3)">Sleep 18–20 h/day; long naps are normal</td>
         </tr>
         <tr style="border-bottom:1px solid rgba(0,0,0,.05)">
-          <td style="padding:.65rem .8rem;font-weight:600">Sound</td>
-          <td style="padding:.65rem .8rem">≥ 3 barks in 5 s (bark_detected, no sustained)</td>
-          <td style="padding:.65rem .8rem"><span style="background:#EBF5FB;color:#1A5276;font-size:11.5px;padding:2px 7px;border-radius:10px;font-weight:600">Info</span></td>
-          <td style="padding:.65rem .8rem">60 s</td>
+          <td style="padding:.6rem .8rem;font-weight:600">Juvenile Puppy (2–4 mo)</td>
+          <td style="padding:.6rem .8rem;font-weight:600">120 min</td>
+          <td style="padding:.6rem .8rem"><span style="background:#EAF3FB;color:#2471A3;font-size:11px;padding:2px 7px;border-radius:10px;font-weight:600">Info</span></td>
+          <td style="padding:.6rem .8rem;font-size:11px;color:var(--t3)">Sleep 16–18 h/day; frequent naps</td>
         </tr>
         <tr style="border-bottom:1px solid rgba(0,0,0,.05)">
-          <td style="padding:.65rem .8rem;font-weight:600">Sound</td>
-          <td style="padding:.65rem .8rem">≥ 3 barks + sustained_sound ≥ 1.5 s</td>
-          <td style="padding:.65rem .8rem"><span style="background:#FBF0E0;color:#8B5A1A;font-size:11.5px;padding:2px 7px;border-radius:10px;font-weight:600">Warning</span></td>
-          <td style="padding:.65rem .8rem">60 s</td>
+          <td style="padding:.6rem .8rem;font-weight:600">Small Dog</td>
+          <td style="padding:.6rem .8rem;font-weight:600">60 min</td>
+          <td style="padding:.6rem .8rem"><span style="background:#EAF3FB;color:#2471A3;font-size:11px;padding:2px 7px;border-radius:10px;font-weight:600">Info</span></td>
+          <td style="padding:.6rem .8rem;font-size:11px;color:var(--t3)">Adult: daytime inactivity &gt;2 h is a concern</td>
         </tr>
         <tr style="border-bottom:1px solid rgba(0,0,0,.05)">
-          <td style="padding:.65rem .8rem;font-weight:600">Motion</td>
-          <td style="padding:.65rem .8rem">Transition: no-motion → motion detected</td>
-          <td style="padding:.65rem .8rem"><span style="background:#EBF5FB;color:#1A5276;font-size:11.5px;padding:2px 7px;border-radius:10px;font-weight:600">Info</span></td>
-          <td style="padding:.65rem .8rem">5 min</td>
+          <td style="padding:.6rem .8rem;font-weight:600">Large / Giant Dog</td>
+          <td style="padding:.6rem .8rem;font-weight:600">90 min</td>
+          <td style="padding:.6rem .8rem"><span style="background:#EAF3FB;color:#2471A3;font-size:11px;padding:2px 7px;border-radius:10px;font-weight:600">Info</span></td>
+          <td style="padding:.6rem .8rem;font-size:11px;color:var(--t3)">Large dogs rest more; extra margin given</td>
+        </tr>
+        <tr style="border-bottom:1px solid rgba(0,0,0,.05)">
+          <td style="padding:.6rem .8rem;font-weight:600">Brachycephalic</td>
+          <td style="padding:.6rem .8rem;font-weight:600">45 min</td>
+          <td style="padding:.6rem .8rem"><span style="background:#FEF3E2;color:#9A6300;font-size:11px;padding:2px 7px;border-radius:10px;font-weight:600">Warning</span></td>
+          <td style="padding:.6rem .8rem;font-size:11px;color:var(--t3)">Liu 2016: BOAS hypoxia risk &gt;60 min rest; 45 min buffer</td>
         </tr>
         <tr>
-          <td style="padding:.65rem .8rem;font-weight:600">Light</td>
-          <td style="padding:.65rem .8rem">Any light state change (on↔off)</td>
-          <td style="padding:.65rem .8rem"><span style="background:#EBF5FB;color:#1A5276;font-size:11.5px;padding:2px 7px;border-radius:10px;font-weight:600">Info</span></td>
-          <td style="padding:.65rem .8rem">5 min</td>
+          <td style="padding:.6rem .8rem;font-weight:600">Senior / Sensitive</td>
+          <td style="padding:.6rem .8rem;font-weight:600">120 min</td>
+          <td style="padding:.6rem .8rem"><span style="background:#FEF3E2;color:#9A6300;font-size:11px;padding:2px 7px;border-radius:10px;font-weight:600">Warning</span></td>
+          <td style="padding:.6rem .8rem;font-size:11px;color:var(--t3)">Zanghi 2013: senior daytime alert &gt;3 h; 2 h safe buffer</td>
         </tr>
       </tbody>
     </table>
     </div>
-    <div style="background:var(--acc-light);border-radius:8px;padding:.65rem .9rem;font-size:12.5px;color:var(--acc-d);margin-top:.75rem;border:1px solid var(--acc-mid)">
+  </div>
+
+  <!-- Sound Behaviour -->
+  <div class="card" style="margin-bottom:.85rem">
+    <div class="sub">Sound / Vocalization Alert Behaviour</div>
+    <div style="overflow-x:auto">
+    <table style="width:100%;border-collapse:collapse;font-size:12.5px">
+      <thead><tr style="background:var(--bg)">
+        <th style="padding:.5rem .8rem;text-align:left;font-size:11px;font-weight:700;color:var(--t3)">Profile</th>
+        <th style="padding:.5rem .8rem;text-align:left;font-size:11px;font-weight:700;color:var(--t3)">Bark Alone Triggers Alert?</th>
+        <th style="padding:.5rem .8rem;text-align:left;font-size:11px;font-weight:700;color:var(--t3)">Cooldown</th>
+        <th style="padding:.5rem .8rem;text-align:left;font-size:11px;font-weight:700;color:var(--t3)">Notes</th>
+      </tr></thead>
+      <tbody>
+        <tr style="border-bottom:1px solid rgba(0,0,0,.05)">
+          <td style="padding:.6rem .8rem;font-weight:600">Neonatal (0–4 wks)</td>
+          <td style="padding:.6rem .8rem"><span style="background:#FEE8E8;color:#C0392B;font-size:11px;padding:2px 7px;border-radius:10px;font-weight:600">No (cry only)</span></td>
+          <td style="padding:.6rem .8rem">30 s</td>
+          <td style="padding:.6rem .8rem;font-size:11px;color:var(--t3)">Barking impossible before 3–4 wks (Scott &amp; Fuller 1965). Sustained cry &gt;90 s = distress → Critical alert</td>
+        </tr>
+        <tr style="border-bottom:1px solid rgba(0,0,0,.05)">
+          <td style="padding:.6rem .8rem;font-weight:600">Puppy 1–4 months</td>
+          <td style="padding:.6rem .8rem"><span style="background:#FEE8E8;color:#C0392B;font-size:11px;padding:2px 7px;border-radius:10px;font-weight:600">No</span></td>
+          <td style="padding:.6rem .8rem">30–60 s</td>
+          <td style="padding:.6rem .8rem;font-size:11px;color:var(--t3)">Frequent whimpering normal; only sustained vocalization triggers Warning</td>
+        </tr>
+        <tr style="border-bottom:1px solid rgba(0,0,0,.05)">
+          <td style="padding:.6rem .8rem;font-weight:600">Brachycephalic</td>
+          <td style="padding:.6rem .8rem"><span style="background:#FEE8E8;color:#C0392B;font-size:11px;padding:2px 7px;border-radius:10px;font-weight:600">No</span></td>
+          <td style="padding:.6rem .8rem">30 s</td>
+          <td style="padding:.6rem .8rem;font-size:11px;color:var(--t3)">Respiratory sounds (stertor/stridor) = clinical indicators of BOAS; sustained sound triggers Warning with breathing quality guidance</td>
+        </tr>
+        <tr style="border-bottom:1px solid rgba(0,0,0,.05)">
+          <td style="padding:.6rem .8rem;font-weight:600">Small / Large Dog</td>
+          <td style="padding:.6rem .8rem"><span style="background:#E8F8E8;color:#1E7E34;font-size:11px;padding:2px 7px;border-radius:10px;font-weight:600">Yes</span></td>
+          <td style="padding:.6rem .8rem">60 s</td>
+          <td style="padding:.6rem .8rem;font-size:11px;color:var(--t3)">Bark detected → Info; sustained → Warning</td>
+        </tr>
+        <tr>
+          <td style="padding:.6rem .8rem;font-weight:600">Senior / Sensitive</td>
+          <td style="padding:.6rem .8rem"><span style="background:#E8F8E8;color:#1E7E34;font-size:11px;padding:2px 7px;border-radius:10px;font-weight:600">Yes</span></td>
+          <td style="padding:.6rem .8rem">30 s</td>
+          <td style="padding:.6rem .8rem;font-size:11px;color:var(--t3)">High sensitivity; alert detail notes possible pain/disorientation (Landsberg 2012)</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+
+  <!-- Cooldowns Reference -->
+  <div class="card">
+    <div class="sub">Alert Cooldowns &amp; Push Notification Rules</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.6rem;margin-top:.5rem">
+      <div style="background:var(--bg);border-radius:10px;padding:.75rem 1rem">
+        <div style="font-size:11px;font-weight:700;color:var(--t3);margin-bottom:.25rem">Temperature</div>
+        <div style="font-size:15px;font-weight:700;color:var(--acc)">5 min</div>
+        <div style="font-size:11px;color:var(--t3)">between consecutive alerts</div>
+      </div>
+      <div style="background:var(--bg);border-radius:10px;padding:.75rem 1rem">
+        <div style="font-size:11px;font-weight:700;color:var(--t3);margin-bottom:.25rem">Sound (High sensitivity)</div>
+        <div style="font-size:15px;font-weight:700;color:var(--acc)">30 s</div>
+        <div style="font-size:11px;color:var(--t3)">neonatal / brachy / senior</div>
+      </div>
+      <div style="background:var(--bg);border-radius:10px;padding:.75rem 1rem">
+        <div style="font-size:11px;font-weight:700;color:var(--t3);margin-bottom:.25rem">Sound (Standard)</div>
+        <div style="font-size:15px;font-weight:700;color:var(--acc)">60 s</div>
+        <div style="font-size:11px;color:var(--t3)">adult small / large dog</div>
+      </div>
+      <div style="background:var(--bg);border-radius:10px;padding:.75rem 1rem">
+        <div style="font-size:11px;font-weight:700;color:var(--t3);margin-bottom:.25rem">Motion (edge)</div>
+        <div style="font-size:15px;font-weight:700;color:var(--acc)">2–10 min</div>
+        <div style="font-size:11px;color:var(--t3)">by sensitivity level</div>
+      </div>
+      <div style="background:var(--bg);border-radius:10px;padding:.75rem 1rem">
+        <div style="font-size:11px;font-weight:700;color:var(--t3);margin-bottom:.25rem">Inactivity re-alert</div>
+        <div style="font-size:15px;font-weight:700;color:var(--acc)">30 min</div>
+        <div style="font-size:11px;color:var(--t3)">to prevent sleep-period flooding</div>
+      </div>
+      <div style="background:var(--bg);border-radius:10px;padding:.75rem 1rem">
+        <div style="font-size:11px;font-weight:700;color:var(--t3);margin-bottom:.25rem">Light change</div>
+        <div style="font-size:15px;font-weight:700;color:var(--acc)">5 min</div>
+        <div style="font-size:11px;color:var(--t3)">per state transition</div>
+      </div>
+    </div>
+    <div style="margin-top:1rem;padding:.75rem 1rem;background:var(--bg);border-radius:10px;font-size:12.5px;color:var(--t2);line-height:1.6">
       <strong>Push notifications:</strong> Only <strong>Warning</strong> and <strong>Critical</strong> severity alerts trigger FCM push notifications. Info-level events are stored locally only.
     </div>
   </div>

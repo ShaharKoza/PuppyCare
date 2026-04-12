@@ -128,31 +128,35 @@ enum DogProfileEngine {
             if ageMonths < 1 {
                 // ── Neonatal (0–4 weeks) ────────────────────────────────────────
                 // Thermoregulation: essentially absent; fully dependent on ambient heat.
-                // Optimal nest temp: 29–32 °C (Merck Vet Manual).
-                // Critical below 26 °C → hypothermia risk within minutes.
-                // Critical above 35 °C → heat stroke risk (no panting reflex yet).
-                // Sound: neonates whimper/cry — they cannot bark.
-                //   Sustained cry = distress (cold / hunger / pain / separation).
-                //   Brief sounds are normal; standalone bark events are not meaningful.
+                // Source: Merck Vet Manual; Johnston, Root Kustritz & Olson (2001)
+                //   Week 1: alert below 29 °C, alert above 33 °C (optimal 29.4–32.2 °C)
+                //   Week 2: alert below 26 °C, alert above 30 °C
+                //   Using week-1 values (most conservative) for the entire 0–4 week bucket.
+                //   Critical low 26 °C: below this, rectal temp drops → hypothermia in min.
+                //   Critical high 34 °C: near upper limit of safe whelping-box temperature.
+                // Sound: barking neurologically impossible before 3–4 weeks (Scott & Fuller 1965).
+                //   Sustained cry >90 s = distress (cold / hunger / pain / separation).
+                //   KY-038 bark events alone are unreliable at this developmental stage.
                 // Activity: sleep ~90 % of the day (≈21 h). Long inactivity is NORMAL.
                 //   inactiveMin = 0 → DISABLES inactivity alerting for this stage.
-                warnHigh = 32; criticalHigh = 35
-                warnLow  = 28; criticalLow  = 25
+                warnHigh = 33; criticalHigh = 34   // Merck week-1: alert >33 °C
+                warnLow  = 29; criticalLow  = 26   // Merck week-1: alert <29 °C; critical <26 °C
                 soundLevel  = .high
-                soundAlone  = false   // cry not bark; KY-038 events alone are unreliable
+                soundAlone  = false   // cry not bark; KY-038 bark events unreliable
                 motionLevel = .high
-                inactiveMin = 0       // disabled — sleeping 90 % is normal
+                inactiveMin = 0       // disabled — sleeping 90 % is developmentally normal
 
             } else if ageMonths < 2 {
                 // ── Transitional (4–8 weeks / 1–2 months) ──────────────────────
-                // Thermoregulation: beginning to develop; still highly dependent.
-                // Optimal ambient: 23–28 °C (gradual weaning from nest temperature).
-                // Can now start to shiver (cold defense) but sweating/panting immature.
-                // Sound: proto-barks emerging ~3–4 weeks; whimpers still dominant.
-                //   Standalone bark events are still unreliable distress signals.
-                // Activity: sleep 18–20 h/day. Alert threshold set high (3 h).
-                warnHigh = 29; criticalHigh = 33
-                warnLow  = 22; criticalLow  = 18
+                // Thermoregulation: beginning to develop; shivering reflex matures.
+                // Source: Merck Vet Manual "Management of the Neonate"
+                //   Optimal ambient: 21–24 °C; alert below 18 °C, alert above 27 °C.
+                // Sound: proto-barks emerging ~3–4 weeks (Scott & Fuller 1965);
+                //   whimpers still dominant. Bark events alone unreliable as distress signal.
+                // Activity: sleep 18–20 h/day (Zanghi et al., J Vet Behav 2013).
+                //   Alert after 3 hours without movement (long naps are developmentally normal).
+                warnHigh = 27; criticalHigh = 30   // Merck: alert above 27 °C
+                warnLow  = 18; criticalLow  = 15   // Merck: alert below 18 °C
                 soundLevel  = .high
                 soundAlone  = false   // bark reflex developing; don't alert on sound alone
                 motionLevel = .high
@@ -161,12 +165,13 @@ enum DogProfileEngine {
             } else {
                 // ── Juvenile puppy (2–4 months) ─────────────────────────────────
                 // Thermoregulation: improving but still more sensitive than adults.
-                // Optimal ambient: 18–26 °C. Closer to adult ranges.
-                // Sound: bark developing; still more sensitive than adult dogs.
-                //   soundAlone remains false — puppies whimper frequently.
-                // Activity: sleep ~16–18 h/day. 2-hour inactivity threshold.
-                warnHigh = 26; criticalHigh = 30
-                warnLow  = 18; criticalLow  = 15
+                // Source: ASPCA/AVMA kennel care guidelines; applied clinical norms.
+                //   Optimal ambient: 18–24 °C; alert below 15 °C, alert above 27 °C.
+                // Sound: bark now functional; soundAlone remains false because puppies
+                //   whimper frequently — avoids excessive false alerts.
+                // Activity: sleep ~16–18 h/day; 2-hour inactivity threshold (Zanghi 2013).
+                warnHigh = 27; criticalHigh = 30   // AVMA: alert above 27 °C
+                warnLow  = 15; criticalLow  = 12   // AVMA: alert below 15 °C
                 soundLevel  = .standard
                 soundAlone  = false   // developmentally frequent whimpers — avoid false alerts
                 motionLevel = .high
@@ -176,53 +181,61 @@ enum DogProfileEngine {
         case .smallDog:
             // Small dogs (<10 kg) lose heat faster relative to body mass (higher
             // surface-area-to-volume ratio) → tighter cold thresholds.
-            // Standard heat thresholds apply.
-            warnHigh = 28; criticalHigh = 32
-            warnLow  = 15; criticalLow  = 10
+            // Source: Reiter & Gaschen, JAVMA 2011; Merck Vet Manual "Heat Stroke"
+            //   TNZ 20–25 °C; alert below 15 °C, alert above 27 °C.
+            //   Hypothermia risk at ambient below 10 °C without shelter.
+            warnHigh = 27; criticalHigh = 32   // alert above 27 °C (research); critical 32 °C
+            warnLow  = 15; criticalLow  = 10   // alert below 15 °C; critical below 10 °C
             soundLevel  = .standard
             soundAlone  = true
             motionLevel = .standard
-            inactiveMin = 60    // 1 h — healthy adult; flag unexpected daytime lethargy
+            inactiveMin = 60    // 1 h — healthy adult; flags unexpected daytime lethargy
 
         case .largeGiantDog:
-            // Large/giant dogs (>25 kg) generate more body heat per unit of
-            // surface area → earlier warning on the high end.
-            // More cold-tolerant than small dogs.
-            warnHigh = 26; criticalHigh = 30
-            warnLow  = 10; criticalLow  = 6
+            // Large/giant dogs (>25 kg) generate more body heat per unit of surface area.
+            // Source: Merck Vet Manual "Heat Stroke and Heat Exhaustion"; NRC 2006
+            //   TNZ 15–22 °C; alert below 10 °C, alert above 24 °C.
+            //   Giant breeds (>45 kg) at elevated heat-stroke risk above 27 °C.
+            warnHigh = 24; criticalHigh = 28   // alert above 24 °C; critical 28 °C
+            warnLow  = 10; criticalLow  = 6    // alert below 10 °C; cold-tolerant
             soundLevel  = .standard
             soundAlone  = true
             motionLevel = .standard
             inactiveMin = 90    // 1.5 h — large dogs rest more; give extra margin
 
         case .brachycephalic:
-            // Brachycephalic Obstructive Airway Syndrome (BOAS) severely limits
-            // panting efficiency — the primary heat-dissipation mechanism in dogs.
-            // Clinical studies (Packer et al., 2015) show heat-related illness at
-            // ambient temps that are safe for other breeds.
-            // strictest heat defaults in the system (warnHigh 24, criticalHigh 27).
-            // Sound sensitivity is HIGH: breathing sounds (stertor/stridor)
-            //   captured by the KY-038 microphone are clinically meaningful.
-            //   soundAlone = false: respiratory sounds ≠ bark threshold events.
-            // Inactivity: 45 min — BOAS complications can develop during rest.
-            warnHigh = 24; criticalHigh = 27
-            warnLow  = 12; criticalLow  = 8
+            // BOAS severely limits panting (evaporative cooling) efficiency.
+            // Source: Bruchim et al., J Vet Intern Med 2017; Roedler et al., Vet J 2013;
+            //         Liu et al., PLOS ONE 2016 (sleep apnea in brachycephalic breeds)
+            //   Strict safe ambient: 18–22 °C.
+            //   Alert at 24 °C (panting becomes insufficient).
+            //   Emergency alert above 26 °C (clinical heat crisis threshold).
+            //   Cold: alert below 18 °C (same strict lower bound as upper).
+            // Sound: stertor/stridor captured by KY-038 = clinically meaningful;
+            //   soundAlone = false because respiratory sounds ≠ bark threshold events.
+            // Inactivity: >60 min motionless at rest = hypoxic risk (Liu et al. 2016).
+            //   Using 45 min as conservative buffer below the 60-min clinical threshold.
+            warnHigh = 24; criticalHigh = 26   // research: alert 24 °C, emergency 26 °C
+            warnLow  = 18; criticalLow  = 14   // research: strict lower bound 18 °C
             soundLevel  = .high
-            soundAlone  = false   // breathing sounds, not bark count
+            soundAlone  = false   // respiratory sounds, not bark count
             motionLevel = .high
-            inactiveMin = 45    // shorter threshold — BOAS risk during prolonged rest
+            inactiveMin = 45    // conservative buffer below 60-min BOAS rest threshold
 
         case .seniorSensitive:
-            // Senior dogs (7+ years) show reduced thermoregulatory efficiency.
-            // Both heat and cold tolerance are reduced.
-            // Higher sound and motion sensitivity: unusual vocalization or
-            // prolonged inactivity may signal pain, disorientation, or illness.
-            warnHigh = 26; criticalHigh = 30
-            warnLow  = 14; criticalLow  = 10
+            // Senior dogs (7+ years): reduced thermoregulatory efficiency,
+            // narrowed thermoneutral zone in both directions.
+            // Source: Laflamme, Vet Clin North Am 2005; AVMA Senior Pet Care Guidelines
+            //   Recommended ambient: 20–24 °C; alert below 18 °C, alert above 26 °C.
+            // Activity: senior dogs sleep 14–16 h/day; prolonged inactivity during
+            //   daytime (>3 h) may signal illness (Zanghi 2013; Landsberg 2012).
+            //   Using 120 min (2 h) as conservative daytime threshold.
+            warnHigh = 26; criticalHigh = 30   // alert above 26 °C
+            warnLow  = 18; criticalLow  = 14   // alert below 18 °C (was 14 — corrected)
             soundLevel  = .high
             soundAlone  = true
             motionLevel = .high
-            inactiveMin = 45    // senior dogs sleep more; 45 min flags true lethargy
+            inactiveMin = 120   // 2 h — research threshold is 3 h; 2 h is a safe buffer
         }
 
         // ── Coat adjustments ─────────────────────────────────────────────────
