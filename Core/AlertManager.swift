@@ -358,7 +358,7 @@ final class AlertManager: ObservableObject {
     // MARK: - Threshold Checks
 
     private func checkTemperature(_ sensor: SensorData) {
-        guard let temp = sensor.temperature, temp != 0 else { return }
+        guard let temp = sensor.temperature else { return }
 
         let now = Date()
         if let last = lastTempAlertDate, now.timeIntervalSince(last) < tempCooldown { return }

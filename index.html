@@ -24,9 +24,11 @@
         <ul class="nav-links" id="nav-links">
           <li><a href="#overview">Overview</a></li>
           <li><a href="#features">Features</a></li>
+          <li><a href="#alerts">Alert Levels</a></li>
           <li><a href="#screens">Screens</a></li>
           <li><a href="#technical">Technical</a></li>
           <li><a href="#guide">User Guide</a></li>
+          <li><a href="#troubleshooting">Troubleshooting</a></li>
           <li><a href="#project-info">Project Info</a></li>
         </ul>
       </nav>
@@ -75,7 +77,7 @@
       </p>
 
       <p class="hero-stack reveal reveal-d3">
-        iOS 17 · SwiftUI · Raspberry Pi · Firebase · FCM
+        iOS 16+ · SwiftUI · Raspberry Pi · Firebase RTDB · FCM · Python · Node.js
       </p>
 
       <div class="hero-btns reveal reveal-d4">
@@ -91,7 +93,7 @@
           <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
           Read User Guide
         </a>
-        <a href="[PRESENTATION_URL]" target="_blank" rel="noopener" class="btn btn-outline-white">
+        <a href="https://www.canva.com/design/DAHGHNftkZM/vBETddiiYuyt4vCmqDcnFg/view" target="_blank" rel="noopener" class="btn btn-outline-white">
           <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
           View Presentation
         </a>
@@ -115,34 +117,35 @@
 
       <div class="abstract-body reveal reveal-d1">
         <p>
-          <strong>PuppyCare</strong> is a full-stack IoT product that closes the information gap between
-          dog owners and their kennels. By pairing a <strong>Raspberry Pi sensor station</strong> with
-          a native <strong>SwiftUI iOS application</strong>, PuppyCare delivers continuous, real-time
-          visibility into every aspect of a puppy's environment — temperature, humidity, motion, sound
-          levels, light conditions, and live camera snapshots.
+          <strong>PuppyCare</strong> is a dedicated iPhone app for continuous, real-time monitoring
+          of your dog's environment. A <strong>Raspberry Pi sensor unit</strong> installed near the
+          kennel collects data across <em>6 measurement types</em> — temperature, humidity, light,
+          motion, sound, and derived sleep state — and transmits it instantly to
+          <strong>Firebase Realtime Database</strong>, which propagates every update to the iOS app
+          in under a second.
         </p>
         <p>
-          The core problem PuppyCare solves is <em>ambient uncertainty</em>: when a dog is kenneled,
-          its owner has no reliable way to know whether conditions are safe or distressing. Extreme
-          temperatures, sustained barking, or irregular motion patterns can go unnoticed for hours.
-          PuppyCare eliminates this gap with a real-time data pipeline built on
-          <strong>Firebase Realtime Database</strong> — sensor data written by the Pi propagates to
-          the iOS app in under a second, and <strong>Firebase Cloud Functions</strong> dispatch push
-          notifications for any critical event.
+          The system is built around <strong>three core components</strong>: the Raspberry Pi sensor
+          station running a Python script with the Firebase Admin SDK; the Firebase backend handling
+          real-time sync and Cloud Function–powered push notifications; and a native
+          <strong>SwiftUI iOS app</strong> (iOS 16+) that presents live sensor tiles, an alert
+          history, feeding &amp; routine management, an AI food-safety assistant, and a full dog
+          profile — all in one coherent interface.
         </p>
         <p>
-          Beyond monitoring, PuppyCare is a <strong>complete care management platform</strong>. An
-          integrated feeding scheduler tracks meals, walks, and play sessions with per-meal calorie
-          accounting. An AI food safety assistant evaluates any ingredient for canine safety in real
-          time. A detailed dog profile stores breed-specific thresholds and generates personalized
-          vaccine reminders — making PuppyCare the single app every puppy owner needs.
+          Alert thresholds are <em>age- and breed-adjusted</em>: puppies receive stricter monitoring
+          than adults, and breeds like Brachycephalics or Nordic double-coated dogs have dedicated
+          safety ranges backed by USDA APHIS, Purdue Canine Welfare, VCA Animal Hospitals, and
+          Royal Canin Academy research. PuppyCare is not just a monitoring tool — it is a
+          <strong>complete, evidence-based care platform</strong>.
         </p>
       </div>
 
       <div class="overview-pills reveal reveal-d2" aria-label="Key technologies">
-        <span class="pill">Real-Time Sensor Sync</span>
+        <span class="pill">6 Real-Time Sensors</span>
+        <span class="pill">Age &amp; Breed Thresholds</span>
         <span class="pill">Firebase + FCM Alerts</span>
-        <span class="pill">Native SwiftUI</span>
+        <span class="pill">Native SwiftUI iOS 16+</span>
         <span class="pill">Raspberry Pi Hardware</span>
         <span class="pill">AI Food Safety</span>
         <span class="pill">Full Care Management</span>
@@ -162,40 +165,127 @@
         <p class="eyebrow">Features</p>
         <div class="divider-line" aria-hidden="true"></div>
         <h2 id="features-title">Everything your puppy needs.</h2>
-        <p class="section-sub">From live environmental monitoring to a built-in AI food assistant — PuppyCare covers the full spectrum of modern kennel care.</p>
+        <p class="section-sub">Six sensors, four alert levels, four app tabs — PuppyCare covers the full spectrum of modern kennel care.</p>
       </div>
 
       <div class="grid-3">
         <article class="feat-card reveal reveal-d1">
-          <div class="feat-icon" aria-hidden="true">📡</div>
-          <h3>Live Sensor Monitoring</h3>
-          <p>Real-time tiles for temperature, humidity, motion, bark count, light state, and kennel presence timer — all updating live via Firebase listeners.</p>
+          <div class="feat-icon" aria-hidden="true">🌡️</div>
+          <h3>Temperature &amp; Humidity</h3>
+          <p>DHT22 sensor polled every 5 s. Age-adjusted thresholds from newborn (29–32°C) to adult (20–29°C). Humidity monitoring 30–70% for adults, 55–65% for puppies.</p>
         </article>
         <article class="feat-card reveal reveal-d2">
-          <div class="feat-icon" aria-hidden="true">🚨</div>
-          <h3>Smart Alerts</h3>
-          <p>Threshold-based alerts for extreme temperatures and sustained barking. Firebase Cloud Functions dispatch FCM push notifications to your device instantly.</p>
+          <div class="feat-icon" aria-hidden="true">🏃</div>
+          <h3>Motion &amp; Sleep Detection</h3>
+          <p>PIR motion sensor with last-motion timestamp and seconds-since counter. Sleep state is derived from darkness + absence of motion + silence — not a single sensor.</p>
         </article>
         <article class="feat-card reveal reveal-d3">
-          <div class="feat-icon" aria-hidden="true">📷</div>
-          <h3>Camera Updates</h3>
-          <p>Tap to request a live kennel snapshot. The Pi captures and uploads the image to Firebase; the app displays it within seconds with a timestamp.</p>
+          <div class="feat-icon" aria-hidden="true">🔊</div>
+          <h3>Sound &amp; Bark Analysis</h3>
+          <p>Detects general sound and classifies barks separately. Unclassified sound does not count in the bark count. Triggers alerts after sustained barking bursts.</p>
         </article>
         <article class="feat-card reveal reveal-d1">
-          <div class="feat-icon" aria-hidden="true">🍖</div>
-          <h3>Feeding Management</h3>
-          <p>Daily meal schedule with gram tracking and automatic calorie calculation. Add meals, walks, and play sessions with next-event countdowns on every row.</p>
+          <div class="feat-icon" aria-hidden="true">🚨</div>
+          <h3>4-Level Alert System</h3>
+          <p>Normal → Warning → Stress → Emergency. Cloud Functions trigger FCM push notifications instantly. Thresholds are breed- and age-specific per USDA APHIS guidelines.</p>
         </article>
         <article class="feat-card reveal reveal-d2">
-          <div class="feat-icon" aria-hidden="true">📅</div>
-          <h3>Routine Tracking</h3>
-          <p>Structured daily routines with local notifications for upcoming meals and walks. Never miss a scheduled care event — even when the app is in the background.</p>
+          <div class="feat-icon" aria-hidden="true">📷</div>
+          <h3>On-Demand Camera</h3>
+          <p>Tap to request a live kennel snapshot. The Pi responds to a Firebase write, captures and uploads the image; the app displays it within seconds with a timestamp.</p>
         </article>
         <article class="feat-card reveal reveal-d3">
-          <div class="feat-icon" aria-hidden="true">🐾</div>
-          <h3>Dog Profile & Reminders</h3>
-          <p>Breed, sex, age, weight, and custom alert thresholds stored locally. Auto-generated vaccine reminders and an AI food safety assistant built right in.</p>
+          <div class="feat-icon" aria-hidden="true">🍖</div>
+          <h3>Care &amp; Routine Management</h3>
+          <p>Daily meal schedule with gram tracking and calorie totals. Walks and play sessions with countdowns. AI food-safety assistant + auto-generated vaccine reminders.</p>
         </article>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ════════════════════════════════════════
+       ALERT LEVELS
+  ════════════════════════════════════════ -->
+  <section id="alerts" class="section section-white" aria-labelledby="alerts-title">
+    <div class="container-wide">
+
+      <div class="section-header reveal">
+        <p class="eyebrow">Alert System</p>
+        <div class="divider-line" aria-hidden="true"></div>
+        <h2 id="alerts-title">Four levels of protection.</h2>
+        <p class="section-sub">The system continuously evaluates all sensor data and assigns the kennel one of four severity states. Thresholds are age- and breed-adjusted — puppies receive stricter monitoring.</p>
+      </div>
+
+      <div class="grid-4 reveal reveal-d1">
+
+        <article class="alert-card alert-normal">
+          <div class="alert-indicator" aria-hidden="true"></div>
+          <div class="alert-level-label">Normal</div>
+          <h3>All Clear</h3>
+          <p>All parameters are within safe ranges. No action required. The kennel environment is comfortable and stable.</p>
+          <div class="alert-example">🟢 Temperature, humidity, motion, and sound all nominal.</div>
+        </article>
+
+        <article class="alert-card alert-warning">
+          <div class="alert-indicator" aria-hidden="true"></div>
+          <div class="alert-level-label">Warning</div>
+          <h3>Monitor Closely</h3>
+          <p>One parameter is approaching a threshold limit. Recommended to keep an eye on the situation — no immediate action needed yet.</p>
+          <div class="alert-example">🟡 Temperature reaching the upper comfort boundary.</div>
+        </article>
+
+        <article class="alert-card alert-stress">
+          <div class="alert-indicator" aria-hidden="true"></div>
+          <div class="alert-level-label">Stress</div>
+          <h3>Check Soon</h3>
+          <p>Multiple signs of discomfort detected, or a single parameter is outside the comfort range. Check on your dog soon.</p>
+          <div class="alert-example">🟠 Prolonged barking + elevated temperature simultaneously.</div>
+        </article>
+
+        <article class="alert-card alert-emergency">
+          <div class="alert-indicator" aria-hidden="true"></div>
+          <div class="alert-level-label">Emergency</div>
+          <h3>Immediate Action</h3>
+          <p>A critical threshold has been crossed. An FCM push notification is dispatched instantly. Immediate response is required.</p>
+          <div class="alert-example">🔴 Temperature above 35°C or below 7°C (adult dog).</div>
+        </article>
+
+      </div>
+
+      <div class="alert-thresholds-summary reveal reveal-d2">
+        <div class="threshold-row">
+          <span class="threshold-label">Young Puppy (0–4 weeks)</span>
+          <span class="threshold-range range-normal">24–30°C safe</span>
+          <span class="threshold-range range-emergency">Emergency: &lt;20°C / &gt;34°C</span>
+        </div>
+        <div class="threshold-row">
+          <span class="threshold-label">Older Puppy (1–6 months)</span>
+          <span class="threshold-range range-normal">22–28°C safe</span>
+          <span class="threshold-range range-emergency">Emergency: &lt;18°C / &gt;32°C</span>
+        </div>
+        <div class="threshold-row">
+          <span class="threshold-label">Adult Dog</span>
+          <span class="threshold-range range-normal">18–26°C safe</span>
+          <span class="threshold-range range-emergency">Emergency: Δ≥4°C from range</span>
+        </div>
+        <div class="threshold-row">
+          <span class="threshold-label">Humidity (all ages)</span>
+          <span class="threshold-range range-normal">30–70% safe</span>
+          <span class="threshold-range range-emergency">Stress: Δ≥15% from range</span>
+        </div>
+        <div class="threshold-row">
+          <span class="threshold-label">Bark Count (5 s window)</span>
+          <span class="threshold-range range-normal">0–2 events = quiet</span>
+          <span class="threshold-range range-emergency">≥3 events = bark_detected alert</span>
+        </div>
+        <div class="threshold-row">
+          <span class="threshold-label">Sleep Detection</span>
+          <span class="threshold-range range-normal">Dark + quiet + still</span>
+          <span class="threshold-range range-emergency">Requires 420 s inactivity</span>
+        </div>
+        <p class="threshold-note">Thresholds from <code>main_sensors.py</code> v2 (Puppy-Safe Edition) · Sources: USDA APHIS · Purdue Canine Welfare · VCA Animal Hospitals · Royal Canin Academy · NIH/PMC</p>
       </div>
 
     </div>
@@ -212,7 +302,30 @@
         <p class="eyebrow">Screens &amp; Examples</p>
         <div class="divider-line" aria-hidden="true"></div>
         <h2 id="screens-title">A look inside the app.</h2>
-        <p class="section-sub">Six core screens — each designed with a consistent SwiftUI system of warm tones, rounded cards, and data-first layouts.</p>
+        <p class="section-sub">Four app tabs — Home, Routine, Assistant, Profile — each designed with a consistent SwiftUI system of warm tones, rounded cards, and data-first layouts.</p>
+      </div>
+
+      <div class="app-tabs-bar reveal reveal-d1" aria-label="App tabs">
+        <div class="app-tab">
+          <span class="app-tab-icon" aria-hidden="true">🏠</span>
+          <span class="app-tab-name">Home</span>
+          <span class="app-tab-desc">Dashboard</span>
+        </div>
+        <div class="app-tab">
+          <span class="app-tab-icon" aria-hidden="true">📅</span>
+          <span class="app-tab-name">Routine</span>
+          <span class="app-tab-desc">Daily management</span>
+        </div>
+        <div class="app-tab">
+          <span class="app-tab-icon" aria-hidden="true">🤖</span>
+          <span class="app-tab-name">Assistant</span>
+          <span class="app-tab-desc">Insights &amp; AI</span>
+        </div>
+        <div class="app-tab">
+          <span class="app-tab-icon" aria-hidden="true">🐕</span>
+          <span class="app-tab-name">Profile</span>
+          <span class="app-tab-desc">Dog's data</span>
+        </div>
       </div>
 
       <div class="grid-3">
@@ -353,19 +466,19 @@
           <ul class="tech-list">
             <li>
               <span class="tech-key">UI Layer</span>
-              <span class="tech-val">SwiftUI, Combine, <code>@MainActor</code> — all views reactive to <code>@Published</code> sensor state</span>
+              <span class="tech-val">SwiftUI, Combine, <code>@MainActor</code> — Dashboard, Routine, Assistant &amp; Profile tabs; all views reactive to <code>@Published</code> sensor state</span>
             </li>
             <li>
               <span class="tech-key">Core Services</span>
-              <span class="tech-val">FirebaseService · AlertManager · ProfileStore · FoodAssistantService · ReminderManager</span>
+              <span class="tech-val">FirebaseService · AlertManager · SensorHistoryStore · ProfileStore · FoodAssistantService · ReminderManager</span>
             </li>
             <li>
               <span class="tech-key">Data Flow</span>
-              <span class="tech-val">Pi → Firebase RTDB → iOS listeners → UI re-render under 1 second end-to-end</span>
+              <span class="tech-val">Pi → <code>kennel/sensors</code> (primary) + <code>kennel/alerts</code> (feed) → iOS listeners → UI re-render &lt;1 s end-to-end</span>
             </li>
             <li>
-              <span class="tech-key">Design System</span>
-              <span class="tech-val">Custom AppTheme with semantic color tokens, corner radii, spacing, and typography constants</span>
+              <span class="tech-key">Pi Script — v2</span>
+              <span class="tech-val">Python · <code>main_sensors.py</code> Puppy-Safe Edition v2 · multi-threaded DHT reader · AlertEngine with puppy age tiers (young / older)</span>
             </li>
           </ul>
         </article>
@@ -373,24 +486,24 @@
         <article class="tech-card reveal reveal-d2">
           <h3>
             <span class="tech-card-icon" aria-hidden="true">🔧</span>
-            Raspberry Pi + Sensors
+            Raspberry Pi + Sensors (v2)
           </h3>
           <ul class="tech-list">
             <li>
-              <span class="tech-key">Platform</span>
-              <span class="tech-val">Raspberry Pi running a Python sensor script with Firebase Admin SDK</span>
+              <span class="tech-key">DHT22/AM2302 — GPIO 22</span>
+              <span class="tech-val">Temperature + humidity, polled every 10 s with sanity bounds &amp; delta filtering. Written to <code>kennel/dht</code> and <code>kennel/sensors</code></span>
             </li>
             <li>
-              <span class="tech-key">Temp &amp; Humidity</span>
-              <span class="tech-val">DHT22 polled every 5 s — written to <code>kennel/dht</code></span>
+              <span class="tech-key">LDR — GPIO 4</span>
+              <span class="tech-val">Light/dark detection, polled every 2 s. Combined with motion + silence to derive sleep state. Written to <code>kennel/light</code></span>
             </li>
             <li>
-              <span class="tech-key">Motion</span>
-              <span class="tech-val">PIR sensor with last-motion timestamp and seconds-since counter</span>
+              <span class="tech-key">KY-038 — GPIO 17</span>
+              <span class="tech-val">Sound + bark classification. 5 s sliding window, bark threshold = 3 events; sustained sound = 1.5 s continuous HIGH. Written to <code>kennel/sound</code></span>
             </li>
             <li>
-              <span class="tech-key">Sound &amp; Camera</span>
-              <span class="tech-val">Sound module with 5-second burst counting; camera responds to <code>capture_request</code> writes</span>
+              <span class="tech-key">PIR — GPIO 27 (active LOW)</span>
+              <span class="tech-val">Motion detection with 5 s warmup on boot and 10 s holdoff. Sleep declared after 420 s of combined inactivity (dark + quiet + still). Written to <code>kennel/pir</code></span>
             </li>
           </ul>
         </article>
@@ -402,20 +515,20 @@
           </h3>
           <ul class="tech-list">
             <li>
-              <span class="tech-key">Realtime DB</span>
-              <span class="tech-val">Structured under <code>kennel/</code> — dht · pir · sound · light · alert · camera paths</span>
+              <span class="tech-key">Primary path — <code>kennel/sensors</code></span>
+              <span class="tech-val">Flat combined snapshot written every alert cycle (~5 s) — iOS dashboard reads here: temperature, humidity, light, motion, sound, sleeping, streaks</span>
             </li>
             <li>
-              <span class="tech-key">Cloud Functions</span>
-              <span class="tech-val">Node.js 18, Functions v2 — triggers on <code>kennel/alert</code> where level ≠ "normal"</span>
+              <span class="tech-key">Alert feed — <code>kennel/alerts</code></span>
+              <span class="tech-val">Push-appended list — each non-normal event appended with message, priority, and timestamp. iOS alert tab reads here</span>
             </li>
             <li>
-              <span class="tech-key">Push Notifications</span>
-              <span class="tech-val">FCM + APNs — device token stored at <code>kennel/fcm_token</code> by the iOS app</span>
+              <span class="tech-key">Detail paths</span>
+              <span class="tech-val"><code>kennel/dht</code> · <code>kennel/light</code> · <code>kennel/sound</code> · <code>kennel/pir</code> · <code>kennel/alert</code> · <code>kennel/camera</code></span>
             </li>
             <li>
-              <span class="tech-key">Security</span>
-              <span class="tech-val"><code>GoogleService-Info.plist</code> gitignored; Firebase service account on Pi only</span>
+              <span class="tech-key">Camera</span>
+              <span class="tech-val">Captures every 30 s (periodic) + on every PIR trigger. Written to <code>kennel/camera</code> by <code>camera.py</code></span>
             </li>
           </ul>
         </article>
@@ -442,43 +555,50 @@
         <div class="guide-item reveal reveal-d1">
           <div class="guide-num" aria-hidden="true">1</div>
           <div>
-            <h3>Onboarding</h3>
-            <p>On first launch, a guided flow collects your dog's name, breed, sex, age, and weight before showing the main interface.</p>
+            <h3>Introduction &amp; System Overview</h3>
+            <p>PuppyCare requires an iPhone running iOS 16+, an active Raspberry Pi connected to power and Wi-Fi, and internet on both devices. Three core components: sensor unit, Firebase backend, iOS app.</p>
           </div>
         </div>
         <div class="guide-item reveal reveal-d2">
           <div class="guide-num" aria-hidden="true">2</div>
           <div>
-            <h3>Profile Setup</h3>
-            <p>Set breed-specific alert thresholds for temperature and sound. Add a profile photo. View auto-generated vaccine reminders based on age.</p>
+            <h3>First Launch &amp; Initial Setup</h3>
+            <p>Enter your dog's name and breed, date of birth (directly drives alert thresholds), and current weight. Confirm — the system calibrates and navigates to the Dashboard. The profile saves automatically.</p>
           </div>
         </div>
         <div class="guide-item reveal reveal-d3">
           <div class="guide-num" aria-hidden="true">3</div>
           <div>
-            <h3>Dashboard Usage</h3>
-            <p>The Dashboard shows all live sensor tiles. Tap the camera card to request an on-demand snapshot from the kennel Pi.</p>
+            <h3>Dashboard — Real-Time Monitoring</h3>
+            <p>Live tiles for temperature, humidity, light, motion, sound, sleep state, and alert level. Tap the camera card to request an on-demand kennel snapshot. Data refreshes continuously via Firebase listeners.</p>
           </div>
         </div>
         <div class="guide-item reveal reveal-d1">
           <div class="guide-num" aria-hidden="true">4</div>
           <div>
-            <h3>Feeding &amp; Routine</h3>
-            <p>Add meals, walks, and play sessions. Set gram amounts for automatic calorie totals. Routine rows show a next-event countdown.</p>
+            <h3>Sensor Details &amp; Data Displayed</h3>
+            <p>Six sensors: temperature (age-adjusted), humidity, light (used in sleep detection), PIR motion (stabilises after 1 min), sound &amp; bark count (separate classification), and derived sleep state.</p>
           </div>
         </div>
         <div class="guide-item reveal reveal-d2">
           <div class="guide-num" aria-hidden="true">5</div>
           <div>
-            <h3>Alerts &amp; Reminders</h3>
-            <p>Browse the date-grouped alert history. Use filter chips to narrow by event type. Analytics show daily bark patterns and activity summaries.</p>
+            <h3>Alert System &amp; Severity Levels</h3>
+            <p>Four levels: Normal → Warning → Stress → Emergency. Thresholds are adjusted to your dog's profile. Emergency events dispatch FCM push notifications instantly, even when the app is closed.</p>
           </div>
         </div>
         <div class="guide-item reveal reveal-d3">
           <div class="guide-num" aria-hidden="true">6</div>
           <div>
-            <h3>Camera &amp; Notifications</h3>
-            <p>Grant push notification permission on first launch. Critical and warning-level events push via FCM even when the app is fully closed.</p>
+            <h3>Dog Profile &amp; Personalization</h3>
+            <p>Keep name, breed, sex, date of birth, and weight accurate — inaccurate data affects the entire alert system. Profile data directly drives breed-specific thresholds and auto-generated vaccine reminders.</p>
+          </div>
+        </div>
+        <div class="guide-item reveal reveal-d1">
+          <div class="guide-num" aria-hidden="true">7</div>
+          <div>
+            <h3>Troubleshooting &amp; Common Issues</h3>
+            <p>No data? Check Pi power, Wi-Fi, and the sensor script. 0°C reading? Check wiring. Motion always active? PIR needs 1 min to stabilise. Alerts wrong? Re-enter date of birth and puppy status.</p>
           </div>
         </div>
       </div>
@@ -490,6 +610,99 @@
         </a>
       </div>
 
+    </div>
+  </section>
+
+
+  <!-- ════════════════════════════════════════
+       TROUBLESHOOTING
+  ════════════════════════════════════════ -->
+  <section id="troubleshooting" class="section section-offwhite" aria-labelledby="troubleshooting-title">
+    <div class="container">
+
+      <div class="section-header reveal">
+        <p class="eyebrow">Troubleshooting</p>
+        <div class="divider-line" aria-hidden="true"></div>
+        <h2 id="troubleshooting-title">Common issues &amp; fixes.</h2>
+        <p class="section-sub">Quick answers to the most frequent setup and runtime questions.</p>
+      </div>
+
+      <div class="trouble-grid reveal reveal-d1">
+
+        <div class="trouble-item">
+          <div class="trouble-q">
+            <span class="trouble-icon" aria-hidden="true">📡</span>
+            <h3>No data on the Dashboard</h3>
+          </div>
+          <ul class="trouble-list">
+            <li>Verify the Raspberry Pi is running and connected to power</li>
+            <li>Verify Wi-Fi connection on both the unit and phone</li>
+            <li>Verify the sensor script is active on the Pi</li>
+            <li>Check Firebase security rules allow read access</li>
+          </ul>
+        </div>
+
+        <div class="trouble-item">
+          <div class="trouble-q">
+            <span class="trouble-icon" aria-hidden="true">🌡️</span>
+            <h3>Unexpected 0°C temperature reading</h3>
+          </div>
+          <ul class="trouble-list">
+            <li>A 0°C reading is not necessarily an error — it can be a valid low-temp value</li>
+            <li>If abnormal over time, check the DHT22 sensor wiring</li>
+            <li>Restart the Pi unit if the issue persists</li>
+          </ul>
+        </div>
+
+        <div class="trouble-item">
+          <div class="trouble-q">
+            <span class="trouble-icon" aria-hidden="true">🏃</span>
+            <h3>Motion sensor detecting continuous activity</h3>
+          </div>
+          <ul class="trouble-list">
+            <li>Wait one minute after starting the Pi — PIR requires stabilisation time</li>
+            <li>Check if detection stabilises after a short period</li>
+            <li>If it continues, adjust PIR sensitivity settings</li>
+          </ul>
+        </div>
+
+        <div class="trouble-item">
+          <div class="trouble-q">
+            <span class="trouble-icon" aria-hidden="true">⚙️</span>
+            <h3>Alerts too sensitive or not sensitive enough</h3>
+          </div>
+          <ul class="trouble-list">
+            <li>Verify the date of birth was entered correctly — this directly drives thresholds</li>
+            <li>Verify puppy status is set correctly in Profile</li>
+            <li>Alert thresholds vary according to age and weight</li>
+          </ul>
+        </div>
+
+        <div class="trouble-item">
+          <div class="trouble-q">
+            <span class="trouble-icon" aria-hidden="true">🔊</span>
+            <h3>No bark detection despite audible sound</h3>
+          </div>
+          <ul class="trouble-list">
+            <li>Check if the sound is general noise not classified as a bark</li>
+            <li>Verify bark detection mechanism is active on the Pi</li>
+            <li>Adjust sound sensor sensitivity as needed</li>
+          </ul>
+        </div>
+
+        <div class="trouble-item">
+          <div class="trouble-q">
+            <span class="trouble-icon" aria-hidden="true">🔔</span>
+            <h3>Not receiving push notifications</h3>
+          </div>
+          <ul class="trouble-list">
+            <li>Grant push notification permission on first launch in iOS Settings</li>
+            <li>Confirm the Pi is writing to <code>kennel/fcm_token</code> correctly</li>
+            <li>Verify Firebase Cloud Functions are deployed and active</li>
+          </ul>
+        </div>
+
+      </div>
     </div>
   </section>
 
@@ -524,13 +737,15 @@
   <span class="c-key">"project"</span>      <span class="c-colon">:</span>  <span class="c-string">"PuppyCare — Smart Kennel Monitoring for Puppies"</span><span class="c-colon">,</span>
   <span class="c-key">"author"</span>       <span class="c-colon">:</span>  <span class="c-string">"Shahar Koza"</span><span class="c-colon">,</span>
   <span class="c-key">"institution"</span>  <span class="c-colon">:</span>  <span class="c-string">"Reichman University"</span><span class="c-colon">,</span>
-  <span class="c-key">"year"</span>         <span class="c-colon">:</span>  <span class="c-number">2025</span><span class="c-colon">,</span>
-  <span class="c-key">"platform"</span>     <span class="c-colon">:</span>  <span class="c-string">"iOS 17+ (SwiftUI) + Raspberry Pi"</span><span class="c-colon">,</span>
+  <span class="c-key">"year"</span>         <span class="c-colon">:</span>  <span class="c-number">2026</span><span class="c-colon">,</span>
+  <span class="c-key">"platform"</span>     <span class="c-colon">:</span>  <span class="c-string">"iOS 16+ (SwiftUI) + Raspberry Pi"</span><span class="c-colon">,</span>
   <span class="c-key">"stack"</span>        <span class="c-colon">:</span>  <span class="c-string">"SwiftUI · Firebase RTDB · FCM · Node.js · Python"</span><span class="c-colon">,</span>
+  <span class="c-key">"sensors"</span>      <span class="c-colon">:</span>  <span class="c-string">"DHT22/AM2302 · LDR · KY-038 · PIR (active LOW)"</span><span class="c-colon">,</span>
+  <span class="c-key">"pi_script"</span>    <span class="c-colon">:</span>  <span class="c-string">"main_sensors.py — Puppy-Safe Edition v2"</span><span class="c-colon">,</span>
   <span class="c-key">"category"</span>     <span class="c-colon">:</span>  <span class="c-string">"Smart Pet Care / IoT + Mobile"</span><span class="c-colon">,</span>
   <span class="c-key">"repository"</span>   <span class="c-colon">:</span>  <span class="c-link">"https://github.com/ShaharKoza/PuppyCare"</span><span class="c-colon">,</span>
   <span class="c-key">"license"</span>      <span class="c-colon">:</span>  <span class="c-string">"MIT"</span><span class="c-colon">,</span>
-  <span class="c-key">"version"</span>      <span class="c-colon">:</span>  <span class="c-string">"1.0.0"</span><span class="c-colon">,</span>
+  <span class="c-key">"version"</span>      <span class="c-colon">:</span>  <span class="c-string">"1.0 · April 2026"</span><span class="c-colon">,</span>
   <span class="c-key">"type"</span>         <span class="c-colon">:</span>  <span class="c-string">"Final Year Project · IoT + Mobile Application"</span>
 <span class="c-bracket">}</span></code></pre>
       </div>
@@ -564,7 +779,7 @@
         <h4>Media</h4>
         <ul>
           <li><a href="https://www.canva.com/design/DAHGHPYDn2Y/6qyqSeBrwehN__Zem-T6Tw/watch" target="_blank" rel="noopener">Demo Video</a></li>
-          <li><a href="[PRESENTATION_URL]" target="_blank" rel="noopener">Presentation</a></li>
+          <li><a href="https://www.canva.com/design/DAHGHNftkZM/vBETddiiYuyt4vCmqDcnFg/view" target="_blank" rel="noopener">Presentation</a></li>
         </ul>
       </div>
 

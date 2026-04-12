@@ -174,7 +174,6 @@ struct DashboardView: View {
             }
         }
         .onDisappear {
-            firebase.stopListening()
             showConnectivityBanner = false
         }
         .sheet(item: $activeChart) { chartType in

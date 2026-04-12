@@ -21,8 +21,13 @@ struct PuppyCareApp: App {
                 // This guarantees that the last edit is persisted even if the user force-quits
                 // within the 500 ms debounce window.
                 .onChange(of: scenePhase) { _, newPhase in
-                    if newPhase == .background || newPhase == .inactive {
+                    switch newPhase {
+                    case .active:
+                        FirebaseService.shared.startListening()
+                    case .background, .inactive:
                         profileStore.saveImmediately()
+                    default:
+                        break
                     }
                 }
                 .task {

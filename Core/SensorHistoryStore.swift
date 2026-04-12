@@ -51,7 +51,7 @@ final class SensorHistoryStore: ObservableObject {
 
     // MARK: - Public API
 
-    /// Call this every time a DHT update arrives. Internally throttled.
+    /// Call this every time a sensor update arrives. Internally throttled.
     func record(temperature: Double?, humidity: Double?) {
         guard temperature != nil || humidity != nil else { return }
 
