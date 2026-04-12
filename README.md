@@ -7,7 +7,7 @@
 <h4 align="center">A smart IoT kennel monitoring system for dog owners — live sensor data, behavioral analytics, feeding management, and push alerts, all in one iOS app.</h4>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Platform-iOS%2017%2B-blue?style=flat-square&logo=apple" />
+  <img src="https://img.shields.io/badge/Platform-iOS%2016%2B-blue?style=flat-square&logo=apple" />
   <img src="https://img.shields.io/badge/Swift-5.9-orange?style=flat-square&logo=swift" />
   <img src="https://img.shields.io/badge/Firebase-Realtime%20DB%20%7C%20FCM-yellow?style=flat-square&logo=firebase" />
   <img src="https://img.shields.io/badge/Hardware-Raspberry%20Pi-red?style=flat-square&logo=raspberry-pi" />
@@ -40,8 +40,8 @@ The system uses **Firebase Realtime Database** as the communication backbone bet
 
 | Resource | Link |
 |----------|------|
-| 🎬 Marketing Video | [Watch here]([MARKETING_VIDEO_URL]) |
-| 📊 Project Presentation | [View here]([PRESENTATION_URL]) |
+| 🎬 Marketing Video | [Watch here](https://www.canva.com/design/DAHGHPYDn2Y/6qyqSeBrwehN__Zem-T6Tw/watch) |
+| 📊 Project Presentation | [View here](https://www.canva.com/design/DAHGHNftkZM/vBETddiiYuyt4vCmqDcnFg/view) |
 | 📖 User Guide | [docs/USER_GUIDE.md](docs/USER_GUIDE.md) |
 | 🏗️ Architecture Docs | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) |
 | ⚙️ Setup Guide | [docs/SETUP.md](docs/SETUP.md) |
@@ -152,7 +152,7 @@ The system uses **Firebase Realtime Database** as the communication backbone bet
 ### Prerequisites
 
 - Xcode 15.2 or later
-- iOS 17+ device or simulator
+- iOS 16+ device or simulator
 - A Firebase project with Realtime Database and Cloud Messaging enabled
 - A Raspberry Pi running the companion sensor script (see [Hardware Setup](#hardware-setup))
 

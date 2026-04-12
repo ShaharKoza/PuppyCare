@@ -40,7 +40,7 @@ exports.sendAlertNotification = onValueWritten(
     await getMessaging().send({
       token,
       notification: {
-        title: `${emoji} SmartKennel`,
+        title: `${emoji} PuppyCare`,
         body,
       },
       apns: {

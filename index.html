@@ -330,7 +330,6 @@
           <div class="screen-preview sc-dashboard" aria-label="Dashboard screen placeholder">
             <span class="screen-icon" aria-hidden="true">📡</span>
             <span class="screen-tag">Dashboard</span>
-            <!-- Replace with: <img src="assets/screens/dashboard.png" alt="Dashboard screen" /> -->
           </div>
           <div class="screen-body">
             <h3>Live Dashboard</h3>
@@ -573,7 +572,7 @@
           <div class="guide-num" aria-hidden="true">4</div>
           <div>
             <h3>Sensor Details &amp; Data Displayed</h3>
-            <p>Six sensors: temperature (age-adjusted), humidity, light (used in sleep detection), PIR motion (stabilises after 1 min), sound &amp; bark count (separate classification), and derived sleep state.</p>
+            <p>Six sensors: temperature (age-adjusted), humidity, light (used in sleep detection), PIR motion (requires a brief warm-up after boot), sound &amp; bark count (separate classification), and derived sleep state.</p>
           </div>
         </div>
         <div class="guide-item reveal reveal-d2">
@@ -656,7 +655,7 @@
             <h3>Motion sensor detecting continuous activity</h3>
           </div>
           <ul class="trouble-list">
-            <li>Wait one minute after starting the Pi — PIR requires stabilisation time</li>
+            <li>Wait 30–60 seconds after starting the Pi — the PIR sensor requires a brief warm-up period before readings stabilise</li>
             <li>Check if detection stabilises after a short period</li>
             <li>If it continues, adjust PIR sensitivity settings</li>
           </ul>
@@ -693,7 +692,7 @@
           </div>
           <ul class="trouble-list">
             <li>Grant push notification permission on first launch in iOS Settings</li>
-            <li>Confirm the Pi is writing to <code>kennel/fcm_token</code> correctly</li>
+            <li>Confirm the iOS app has registered an FCM token (check <code>kennel/fcm_token</code> in Firebase Console)</li>
             <li>Verify Firebase Cloud Functions are deployed and active</li>
           </ul>
         </div>
@@ -790,7 +789,7 @@
     </div>
 
     <div class="footer-bottom">
-      <span>© 2025 Shahar Koza · Reichman University · MIT License</span>
+      <span>© 2026 Shahar Koza · Reichman University · MIT License</span>
       <span>Built with SwiftUI · Firebase · Raspberry Pi</span>
     </div>
   </footer>

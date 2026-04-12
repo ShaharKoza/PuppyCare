@@ -105,13 +105,15 @@ function copyInfo() {
   "project"      :  "PuppyCare — Smart Kennel Monitoring for Puppies",
   "author"       :  "Shahar Koza",
   "institution"  :  "Reichman University",
-  "year"         :  2025,
-  "platform"     :  "iOS 17+ (SwiftUI) + Raspberry Pi",
+  "year"         :  2026,
+  "platform"     :  "iOS 16+ (SwiftUI) + Raspberry Pi",
   "stack"        :  "SwiftUI · Firebase RTDB · FCM · Node.js · Python",
+  "sensors"      :  "DHT22/AM2302 · LDR · KY-038 · PIR (active LOW)",
+  "pi_script"    :  "main_sensors.py — Puppy-Safe Edition v2",
   "category"     :  "Smart Pet Care / IoT + Mobile",
   "repository"   :  "https://github.com/ShaharKoza/PuppyCare",
   "license"      :  "MIT",
-  "version"      :  "1.0.0",
+  "version"      :  "1.0 · April 2026",
   "type"         :  "Final Year Project · IoT + Mobile Application"
 }`;
 

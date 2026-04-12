@@ -1,6 +1,6 @@
 # PuppyCare — User Guide
 
-**Version 1.0 · iOS 17+**
+**Version 1.0 · iOS 16+**
 
 Welcome to PuppyCare — your dog's smart kennel companion. This guide walks you through everything you need to get started and make the most of every feature.
 
@@ -39,7 +39,7 @@ Beyond live data, PuppyCare keeps a full history of events, detects behavioral p
 
 | Item | Details |
 |------|---------|
-| iPhone | Any iPhone running iOS 17 or later |
+| iPhone | Any iPhone running iOS 16 or later |
 | Internet | Wi-Fi or cellular — the app streams data in real time |
 | Kennel hardware | Raspberry Pi with DHT22, PIR, sound, light, and camera sensors |
 | Setup | The kennel hardware must already be configured and connected to the same Firebase project |
