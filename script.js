@@ -44,12 +44,18 @@
   }
   window.addEventListener('scroll', handleScroll, { passive: true });
 
-  // Update active link with IntersectionObserver
+  // Update active link with IntersectionObserver.
+  // Only update when the intersecting section actually has a corresponding nav link,
+  // so sections without nav entries (e.g. #value) do not clear the active state.
   const navObserver = new IntersectionObserver(
     (entries) => {
       entries.forEach((entry) => {
         if (!entry.isIntersecting) return;
         const id = entry.target.id;
+        const hasLink = Array.from(navLinks).some(
+          (link) => link.getAttribute('href') === '#' + id
+        );
+        if (!hasLink) return;
         navLinks.forEach((link) => {
           const isActive = link.getAttribute('href') === '#' + id;
           link.classList.toggle('active', isActive);

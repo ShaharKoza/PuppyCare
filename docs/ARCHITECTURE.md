@@ -64,7 +64,7 @@ Key design decisions:
 ### `FirebaseService.swift`
 Singleton that holds all active Realtime Database listeners. Responsibilities:
 
-- Maintains one `DatabaseHandle` per sensor path (`kennel/dht`, `kennel/sound`, `kennel/pir`, `kennel/light`, `kennel/alert`, `kennel/camera`)
+- Maintains one `DatabaseHandle` per sensor path (`kennel/sensors`, `kennel/sound`, `kennel/alert`, `kennel/camera`); `kennel/sensors` is the primary consolidated snapshot written by the Pi every ~5 s
 - Merges partial updates from independent paths into a single `SensorData` struct on `@Published var sensorData`
 - Guards against duplicate listeners with `isListening` flag and `startListening()` / `stopListening()` API
 - Writes to `kennel/fcm_token` (FCM registration), `kennel/camera/capture_request` (snapshot trigger)
@@ -179,11 +179,16 @@ A simple struct (not `Codable`) that aggregates the latest reading from all Fire
 
 ```
 kennel/
-  dht/           ← Written by Pi: temperature, humidity, timestamp
-  light/         ← Written by Pi: light_detected, timestamp
-  sound/         ← Written by Pi: sound_active, bark_detected, bark_count_5s, sustained_sound
-  pir/           ← Written by Pi: motion_detected, last_motion, seconds_since_motion
+  sensors/       ← PRIMARY: written by Pi every ~5 s; iOS app reads here for all live tiles
+                    temperature, humidity, light (String), motion (Bool), sound (Bool),
+                    sleeping (Bool), motion_streak, sound_streak, timestamp (HH:MM:SS)
+  sound/         ← Written by Pi bark-detection loop: sound_active, bark_detected,
+                    bark_count_5s, sustained_sound
   alert/         ← Written by Pi: level, sleeping, puppy_mode, puppy_age, reasons, timestamp
+  alerts/        ← Written by Pi: push-appended list of non-normal alert events (feed)
+  dht/           ← Written by Pi: temperature, humidity, timestamp (detail path)
+  light/         ← Written by Pi: light_detected, timestamp (detail path)
+  pir/           ← Written by Pi: motion_detected, last_motion, seconds_since_motion
   camera/
     capture_request  ← Written by iOS app (ServerValue.timestamp())
     image_url        ← Written by Pi after capture
@@ -199,7 +204,7 @@ kennel/
 Logic:
 1. Read `after.level` — skip if `"normal"`
 2. Fetch `kennel/fcm_token` — skip if absent
-3. Compose notification title from level emoji + `"SmartKennel"`, body from `reasons` array (joined by ` · `) or fallback to level string
+3. Compose notification title from level emoji + `"PuppyCare"`, body from `reasons` array (joined by ` · `) or fallback to level string
 4. Send via `getMessaging().send()` with APNs sound and badge
 
 The function runs in `us-central1`. Deploy with `firebase deploy --only functions`.

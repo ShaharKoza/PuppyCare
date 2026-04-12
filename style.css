@@ -230,29 +230,17 @@ h3 {
   background: rgba(255, 255, 255, 0.18);
 }
 
-/* Brown outlined (on light bg) */
+/* Brown outlined (on light bg) — extends .btn */
 .btn-primary-brown {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
   padding: 13px 26px;
-  border-radius: var(--r-pill);
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
   background: rgba(176, 126, 84, 0.10);
   color: var(--brown-dark);
   border: 1.5px solid rgba(176, 126, 84, 0.32);
-  transition: background 0.16s ease, transform 0.16s ease;
-  text-decoration: none;
 }
 .btn-primary-brown:hover {
   background: rgba(176, 126, 84, 0.18);
   transform: translateY(-2px);
-}
-.btn-primary-brown svg {
-  width: 15px;
-  height: 15px;
+  box-shadow: none;
 }
 
 /* Nav CTA */
@@ -1194,14 +1182,13 @@ h3 {
   /* Guide grid */
   .guide-grid { grid-template-columns: 1fr; }
 
+  /* Troubleshooting grid */
+  .trouble-grid { grid-template-columns: 1fr; }
+
   /* Sections */
   .section { padding: 64px 0; }
   #hero { padding: 72px 20px 64px; }
   .hero-title { letter-spacing: -1px; }
-}
-
-@media (max-width: 768px) {
-  .trouble-grid { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 580px) {

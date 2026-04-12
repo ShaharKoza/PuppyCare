@@ -168,17 +168,17 @@
         <article class="feat-card reveal reveal-d1">
           <div class="feat-icon" aria-hidden="true">🌡️</div>
           <h3>Temperature &amp; Humidity</h3>
-          <p>DHT22 sensor polled every 5 s. Age-adjusted thresholds from newborn (29–32°C) to adult (20–29°C). Humidity monitoring 30–70% for adults, 55–65% for puppies.</p>
+          <p><strong>DHT22/AM2302</strong> — black plastic housing with ventilation grid, 3-wire (VCC / DATA / GND), GPIO 22. Polled every 10 s with delta filtering. Age-adjusted thresholds: newborn 29–32°C → adult 20–29°C. Humidity: 55–65% for puppies, 30–70% for adults.</p>
         </article>
         <article class="feat-card reveal reveal-d2">
           <div class="feat-icon" aria-hidden="true">🏃</div>
           <h3>Motion &amp; Sleep Detection</h3>
-          <p>PIR motion sensor with last-motion timestamp and seconds-since counter. Sleep state is derived from darkness + absence of motion + silence — not a single sensor.</p>
+          <p><strong>HC-SR501 PIR</strong> — white Fresnel-lens dome on square PCB, 3-wire (VCC / OUT / GND), GPIO 27, active LOW. 5 s boot warmup, 10 s holdoff per trigger. Sleep = dark + quiet + still for 420 s continuous.</p>
         </article>
         <article class="feat-card reveal reveal-d3">
           <div class="feat-icon" aria-hidden="true">🔊</div>
           <h3>Sound &amp; Bark Analysis</h3>
-          <p>Detects general sound and classifies barks separately. Unclassified sound does not count in the bark count. Triggers alerts after sustained barking bursts.</p>
+          <p><strong>KY-038</strong> — red PCB with electret microphone + LM393 comparator, AO / G / + / DO pins, LED1 indicator, GPIO 17. 5 s sliding window, bark threshold = 3 events; sustained sound = 1.5 s continuous HIGH.</p>
         </article>
         <article class="feat-card reveal reveal-d1">
           <div class="feat-icon" aria-hidden="true">🚨</div>
@@ -291,7 +291,7 @@
   <!-- ════════════════════════════════════════
        SCREENS
   ════════════════════════════════════════ -->
-  <section id="screens" class="section section-white" aria-labelledby="screens-title">
+  <section id="screens" class="section section-offwhite" aria-labelledby="screens-title">
     <div class="container-wide">
 
       <div class="section-header reveal">
@@ -486,19 +486,19 @@
           <ul class="tech-list">
             <li>
               <span class="tech-key">DHT22/AM2302 — GPIO 22</span>
-              <span class="tech-val">Temperature + humidity, polled every 10 s with sanity bounds &amp; delta filtering. Written to <code>kennel/dht</code> and <code>kennel/sensors</code></span>
+              <span class="tech-val">Black plastic housing with ventilation grid · 3-wire (VCC / DATA / GND) · polled every 10 s with range bounds + delta filtering · writes <code>kennel/dht</code> &amp; <code>kennel/sensors</code></span>
             </li>
             <li>
-              <span class="tech-key">LDR — GPIO 4</span>
-              <span class="tech-val">Light/dark detection, polled every 2 s. Combined with motion + silence to derive sleep state. Written to <code>kennel/light</code></span>
+              <span class="tech-key">LDR (photoresistor) — GPIO 4</span>
+              <span class="tech-val">Detects ambient light/dark, polled every 2 s. Output used together with PIR inactivity + KY-038 silence to derive the sleep state flag. Writes <code>kennel/light</code></span>
             </li>
             <li>
               <span class="tech-key">KY-038 — GPIO 17</span>
-              <span class="tech-val">Sound + bark classification. 5 s sliding window, bark threshold = 3 events; sustained sound = 1.5 s continuous HIGH. Written to <code>kennel/sound</code></span>
+              <span class="tech-val">Red PCB · electret microphone + LM393 comparator · AO / G / + / DO pins · sensitivity trimmer · LED1 indicator · 5 s window, bark ≥ 3 events, sustained ≥ 1.5 s HIGH · writes <code>kennel/sound</code></span>
             </li>
             <li>
-              <span class="tech-key">PIR — GPIO 27 (active LOW)</span>
-              <span class="tech-val">Motion detection with 5 s warmup on boot and 10 s holdoff. Sleep declared after 420 s of combined inactivity (dark + quiet + still). Written to <code>kennel/pir</code></span>
+              <span class="tech-key">HC-SR501 PIR — GPIO 27 (active LOW)</span>
+              <span class="tech-val">White Fresnel-lens dome on square PCB · 3-wire (VCC / OUT / GND) · 5 s boot warmup · 10 s holdoff per trigger · sleep declared after 420 s combined inactivity · writes <code>kennel/pir</code></span>
             </li>
           </ul>
         </article>

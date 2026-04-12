@@ -9,9 +9,9 @@ This guide covers everything needed to build and run PuppyCare locally, configur
 | Tool | Version | Notes |
 |------|---------|-------|
 | Xcode | 15.2+ | Available on the Mac App Store |
-| iOS target | 17.0+ | Device or simulator |
+| iOS target | 16.0+ | Device or simulator |
 | Firebase project | Any plan | Spark (free) tier is sufficient |
-| Node.js | 18+ | Required for Cloud Functions deployment |
+| Node.js | 20+ | Required for Cloud Functions deployment |
 | Firebase CLI | Latest | `npm install -g firebase-tools` |
 
 ---

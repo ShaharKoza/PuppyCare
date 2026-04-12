@@ -111,6 +111,7 @@ The system uses **Firebase Realtime Database** as the communication backbone bet
                         │
          ┌──────────────▼──────────────────────┐
          │        Firebase Realtime Database     │
+         │  kennel/sensors (primary snapshot)    │
          │  kennel/dht   · kennel/sound          │
          │  kennel/pir   · kennel/light          │
          │  kennel/alert · kennel/camera         │
@@ -125,7 +126,7 @@ The system uses **Firebase Realtime Database** as the communication backbone bet
 ```
 
 **Data flow:**
-1. Raspberry Pi reads sensors every few seconds and writes structured JSON to Firebase paths (`kennel/dht`, `kennel/pir`, `kennel/sound`, `kennel/light`, `kennel/alert`)
+1. Raspberry Pi reads sensors every few seconds and writes structured JSON to Firebase paths (`kennel/sensors` primary snapshot, plus `kennel/sound`, `kennel/alert`, and detail paths `kennel/dht`, `kennel/pir`, `kennel/light`)
 2. `FirebaseService` (iOS) holds active `.observe(.value)` listeners on each path and updates `@Published var sensorData` on the main actor
 3. `AlertManager` receives every sensor update, applies cooldown and threshold logic, and appends `AlertRecord` entries to its persistent store
 4. Firebase Cloud Function triggers on `kennel/alert` writes and sends FCM push notifications to the registered device token
@@ -140,7 +141,7 @@ The system uses **Firebase Realtime Database** as the communication backbone bet
 | Data persistence | `UserDefaults` (profile), JSON file (alert history) |
 | Real-time sync | Firebase Realtime Database SDK |
 | Push notifications | Firebase Cloud Messaging (FCM) + APNs |
-| Cloud Functions | Node.js 18, Firebase Functions v2 |
+| Cloud Functions | Node.js 20, Firebase Functions v2 |
 | Hardware | Raspberry Pi (Python sensor script) |
 | Sensors | DHT22 (temp/humidity), PIR, sound module, light sensor, camera |
 | Design system | Custom `AppTheme` with semantic tokens (colors, radii, spacing, typography) |
