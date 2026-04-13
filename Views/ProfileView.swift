@@ -48,6 +48,7 @@ struct ProfileView: View {
                 kennelCard
                 overviewCard
                 if isEditing { editableDetailsCard } else { compactDetailsCard }
+                aboutCard
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, AppTheme.horizontalPadding)
@@ -397,6 +398,44 @@ struct ProfileView: View {
         .padding(14)
         .background(AppTheme.inputBackground)
         .clipShape(RoundedRectangle(cornerRadius: AppTheme.fieldRadius, style: .continuous))
+    }
+
+    // MARK: - About card
+
+    private var aboutCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("About").font(AppTheme.sectionTitleFont)
+
+            Link(destination: URL(string: "https://shaharkoza.github.io/PuppyCare/")!) {
+                HStack(spacing: 14) {
+                    ZStack {
+                        Circle()
+                            .fill(AppTheme.accentBrown.opacity(0.12))
+                            .frame(width: 44, height: 44)
+                        Image(systemName: "globe")
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundStyle(AppTheme.accentBrown)
+                    }
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("PuppyCare Website")
+                            .font(AppTheme.bodyFont)
+                            .foregroundStyle(.primary)
+                        Text("shaharkoza.github.io/PuppyCare")
+                            .font(AppTheme.captionFont)
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer(minLength: 0)
+                    Image(systemName: "arrow.up.right")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(AppTheme.accentBrown.opacity(0.6))
+                }
+                .padding(AppTheme.innerTilePadding)
+                .background(AppTheme.warmTile)
+                .clipShape(RoundedRectangle(cornerRadius: AppTheme.tileRadius, style: .continuous))
+            }
+        }
+        .padding(AppTheme.cardPadding)
+        .cardStyle()
     }
 
     // MARK: - Tile & row builders
