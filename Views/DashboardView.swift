@@ -94,11 +94,8 @@ struct DashboardView: View {
 
     private var isTempStale: Bool { firebase.isTempStale }
 
-    /// Subtitle shown on the temperature tile when a stale but cached value is available.
     private var tempStaleSubtitle: String? {
         guard isTempStale else { return nil }
-        // If we have a cached value, show a soft "X min ago" warning rather than hiding data.
-        // If there's no value at all, the tile shows "--" with "Sensor not responding".
         if firebase.sensorData.temperature != nil,
            let mins = firebase.tempLastSeenMinutesAgo {
             return mins <= 1 ? "Reading may be delayed" : "Last updated \(mins) min ago"
