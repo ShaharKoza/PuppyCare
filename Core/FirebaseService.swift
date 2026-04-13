@@ -46,10 +46,18 @@ final class FirebaseService: ObservableObject {
     /// Used by the dashboard to display a staleness warning when the sensor stops reporting.
     @Published var lastValidTempDate: Date?
 
-    /// True when no valid temperature has been received for more than 120 seconds.
+    /// True when no valid temperature has been received for more than 300 seconds (5 min).
+    /// 300 s gives DHT22 several missed poll cycles before raising an alarm — prevents
+    /// false "sensor not responding" when the Pi is busy or the DHT needs a few retries.
     var isTempStale: Bool {
         guard let date = lastValidTempDate else { return sensorData.temperature == nil }
-        return Date().timeIntervalSince(date) > 120
+        return Date().timeIntervalSince(date) > 300
+    }
+
+    /// How long ago the last valid temperature was received, rounded to the nearest minute.
+    var tempLastSeenMinutesAgo: Int? {
+        guard let date = lastValidTempDate else { return nil }
+        return max(0, Int(Date().timeIntervalSince(date)) / 60)
     }
 
     private let rootRef = Database.database().reference()

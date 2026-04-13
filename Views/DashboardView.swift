@@ -93,6 +93,18 @@ struct DashboardView: View {
     }
 
     private var isTempStale: Bool { firebase.isTempStale }
+
+    /// Subtitle shown on the temperature tile when a stale but cached value is available.
+    private var tempStaleSubtitle: String? {
+        guard isTempStale else { return nil }
+        // If we have a cached value, show a soft "X min ago" warning rather than hiding data.
+        // If there's no value at all, the tile shows "--" with "Sensor not responding".
+        if firebase.sensorData.temperature != nil,
+           let mins = firebase.tempLastSeenMinutesAgo {
+            return mins <= 1 ? "Reading may be delayed" : "Last updated \(mins) min ago"
+        }
+        return "Sensor not responding"
+    }
     private var humidityText:  String {
         guard let v = firebase.sensorData.humidity else { return "--" }
         return String(format: "%.1f%%", v)
@@ -496,10 +508,10 @@ struct DashboardView: View {
         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
             sensorTile(
                 title: "Temperature",
-                value: isTempStale ? "Unavailable" : temperatureText,
+                value: temperatureText,
                 symbol: isTempStale ? "thermometer.trianglebadge.exclamationmark" : "thermometer.medium",
                 tint:   isTempStale ? .orange : .red.opacity(0.75),
-                subtitle: isTempStale ? "Sensor not responding" : nil,
+                subtitle: tempStaleSubtitle,
                 chartType: .temperature
             )
             sensorTile(
