@@ -11,6 +11,12 @@ enum AppTheme {
     /// Recessed background for form inputs inside a card (creates a sunken-field feel).
     static let inputBackground = Color(.secondarySystemBackground)
 
+    // MARK: - Alert level colors
+    static let alertWarning   = Color(red: 224/255, green: 175/255, blue: 0)   // readable amber
+    static let alertStress    = Color.orange
+    static let alertEmergency = Color.red
+    static let alertNormal    = Color.green
+
     // MARK: - Borders & shadows
     static let softBorder = Color.primary.opacity(0.08)
     static let softShadow = Color.black.opacity(0.045)

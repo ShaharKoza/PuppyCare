@@ -189,7 +189,10 @@ final class ProfileStore: ObservableObject {
             }
         }
 
-        if changed { profile = updated }
+        if changed {
+            profile = updated
+            saveImmediately()   // persist normalization changes — auto-save's dropFirst() skips this
+        }
     }
 
     // MARK: - Public API

@@ -60,17 +60,14 @@ struct DashboardView: View {
 
     private var levelAccent: Color {
         switch normalizedLevel {
-        case "emergency": return .red
-        case "stress":    return .orange
-        case "warning":   return .yellow
-        default:          return .green
+        case "emergency": return AppTheme.alertEmergency
+        case "stress":    return AppTheme.alertStress
+        case "warning":   return AppTheme.alertWarning
+        default:          return AppTheme.alertNormal
         }
     }
 
-    private var levelTextColor: Color {
-        if normalizedLevel == "warning" { return Color(red: 224/255, green: 175/255, blue: 0) }
-        return levelAccent
-    }
+    private var levelTextColor: Color { levelAccent }
 
     private var levelIcon: String {
         switch normalizedLevel {
@@ -132,7 +129,8 @@ struct DashboardView: View {
         }
         // GPIO / hardware diagnostic messages — suppress (not user-relevant)
         if lower.contains("gpio") || lower.contains("runtime error") ||
-           lower.contains("checksum") || lower.contains("traceback") {
+           lower.contains("runtimeerror") || lower.contains("checksum") ||
+           lower.contains("traceback") {
             return ""   // filtered out by the .filter { !$0.isEmpty } above
         }
         return cleanReason(reason)

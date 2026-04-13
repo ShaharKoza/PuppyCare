@@ -29,7 +29,9 @@ function sanitizeReason(reason) {
     lower.includes("traceback")     ||
     lower.includes("checksum")      ||
     lower.includes("runtimeerror")  ||
-    lower.includes("runtime error")
+    lower.includes("runtime error") ||
+    lower.includes("oserror")       ||
+    lower.includes("exception")
   ) {
     return null; // caller filters nulls out
   }
