@@ -406,36 +406,85 @@ struct ProfileView: View {
         VStack(alignment: .leading, spacing: 12) {
             Text("About").font(AppTheme.sectionTitleFont)
 
-            Link(destination: URL(string: "https://shaharkoza.github.io/PuppyCare/")!) {
+            VStack(spacing: 0) {
+                aboutLinkRow(
+                    icon: "globe",
+                    iconColor: AppTheme.accentBrown,
+                    title: "PuppyCare Website",
+                    subtitle: "shaharkoza.github.io/PuppyCare",
+                    url: "https://shaharkoza.github.io/PuppyCare/"
+                )
+                Divider().padding(.leading, 58)
+                aboutLinkRow(
+                    icon: "chevron.left.forwardslash.chevron.right",
+                    iconColor: .primary,
+                    title: "Source Code",
+                    subtitle: "github.com/ShaharKoza/PuppyCare",
+                    url: "https://github.com/ShaharKoza/PuppyCare"
+                )
+                Divider().padding(.leading, 58)
                 HStack(spacing: 14) {
                     ZStack {
                         Circle()
-                            .fill(AppTheme.accentBrown.opacity(0.12))
-                            .frame(width: 44, height: 44)
-                        Image(systemName: "globe")
-                            .font(.system(size: 18, weight: .semibold))
-                            .foregroundStyle(AppTheme.accentBrown)
-                    }
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("PuppyCare Website")
-                            .font(AppTheme.bodyFont)
-                            .foregroundStyle(.primary)
-                        Text("shaharkoza.github.io/PuppyCare")
-                            .font(AppTheme.captionFont)
+                            .fill(Color(.systemFill))
+                            .frame(width: 36, height: 36)
+                        Image(systemName: "info.circle.fill")
+                            .font(.system(size: 16, weight: .semibold))
                             .foregroundStyle(.secondary)
                     }
+                    Text("Version")
+                        .font(AppTheme.bodyFont)
+                        .foregroundStyle(.primary)
                     Spacer(minLength: 0)
-                    Image(systemName: "arrow.up.right")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundStyle(AppTheme.accentBrown.opacity(0.6))
+                    Text("1.0.0")
+                        .font(AppTheme.captionFont)
+                        .foregroundStyle(.secondary)
                 }
-                .padding(AppTheme.innerTilePadding)
-                .background(AppTheme.warmTile)
-                .clipShape(RoundedRectangle(cornerRadius: AppTheme.tileRadius, style: .continuous))
+                .padding(.horizontal, AppTheme.innerTilePadding)
+                .padding(.vertical, 13)
             }
+            .background(AppTheme.warmTile)
+            .clipShape(RoundedRectangle(cornerRadius: AppTheme.tileRadius, style: .continuous))
         }
         .padding(AppTheme.cardPadding)
         .cardStyle()
+    }
+
+    private func aboutLinkRow(icon: String, iconColor: Color, title: String, subtitle: String, url: String) -> some View {
+        Group {
+            if let destination = URL(string: url) {
+                Link(destination: destination) {
+                    aboutRowContent(icon: icon, iconColor: iconColor, title: title, subtitle: subtitle)
+                }
+            }
+        }
+    }
+
+    private func aboutRowContent(icon: String, iconColor: Color, title: String, subtitle: String) -> some View {
+        HStack(spacing: 14) {
+            ZStack {
+                Circle()
+                    .fill(iconColor.opacity(0.12))
+                    .frame(width: 36, height: 36)
+                Image(systemName: icon)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(iconColor)
+            }
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(AppTheme.bodyFont)
+                    .foregroundStyle(.primary)
+                Text(subtitle)
+                    .font(AppTheme.captionFont)
+                    .foregroundStyle(.secondary)
+            }
+            Spacer(minLength: 0)
+            Image(systemName: "arrow.up.right")
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(.secondary)
+        }
+        .padding(.horizontal, AppTheme.innerTilePadding)
+        .padding(.vertical, 13)
     }
 
     // MARK: - Tile & row builders

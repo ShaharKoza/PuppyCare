@@ -58,20 +58,13 @@ struct ContentView: View {
             .tabItem { Label("Assistant", systemImage: "sparkles") }
             .tag(2)
 
-            // MARK: Training
-            NavigationStack {
-                TrainingView()
-            }
-            .tabItem { Label("Training", systemImage: "figure.walk.dog") }
-            .tag(3)
-
             // MARK: Profile
             NavigationStack {
                 ProfileView()
                     .environmentObject(profileStore)
             }
             .tabItem { Label("Profile", systemImage: "person.crop.circle") }
-            .tag(4)
+            .tag(3)
         }
         .tint(AppTheme.accentBrown)
     }
