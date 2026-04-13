@@ -42,6 +42,16 @@ final class FirebaseService: ObservableObject {
     @Published var cameraImageURL: URL?
     @Published var cameraImageUpdatedAt: Date?
 
+    /// Timestamp of the last DHT22 reading that contained a valid (non-nil) temperature.
+    /// Used by the dashboard to display a staleness warning when the sensor stops reporting.
+    @Published var lastValidTempDate: Date?
+
+    /// True when no valid temperature has been received for more than 120 seconds.
+    var isTempStale: Bool {
+        guard let date = lastValidTempDate else { return sensorData.temperature == nil }
+        return Date().timeIntervalSince(date) > 120
+    }
+
     private let rootRef = Database.database().reference()
 
     private var connectionHandle: DatabaseHandle?
@@ -189,7 +199,10 @@ final class FirebaseService: ObservableObject {
                 Task { @MainActor [weak self] in
                     guard let self else { return }
 
-                    if let temperature   { self.sensorData.temperature    = temperature   }
+                    if let temperature   {
+                        self.sensorData.temperature    = temperature
+                        self.lastValidTempDate         = Date()   // reset staleness clock
+                    }
                     if let humidity      { self.sensorData.humidity       = humidity      }
                     if let motion        { self.sensorData.motionDetected = motion        }
                     if let sound         { self.sensorData.soundActive    = sound         }

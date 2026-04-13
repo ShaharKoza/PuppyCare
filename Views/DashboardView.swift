@@ -91,6 +91,8 @@ struct DashboardView: View {
         guard let v = firebase.sensorData.temperature else { return "--" }
         return String(format: "%.1f°C", v)
     }
+
+    private var isTempStale: Bool { firebase.isTempStale }
     private var humidityText:  String {
         guard let v = firebase.sensorData.humidity else { return "--" }
         return String(format: "%.1f%%", v)
@@ -105,7 +107,26 @@ struct DashboardView: View {
             !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
             $0.lowercased() != "all clear"
         }
-        return raw.isEmpty ? ["Everything looks good right now"] : raw.map(cleanReason(_:))
+        let mapped = raw.map(translatePiReason(_:)).filter { !$0.isEmpty }
+        return mapped.isEmpty ? ["Everything looks good right now"] : mapped
+    }
+
+    /// Translates raw Pi diagnostic strings into user-friendly messages.
+    /// Pi diagnostics (DHT errors, GPIO warnings) should never appear verbatim in the UI.
+    private func translatePiReason(_ reason: String) -> String {
+        let lower = reason.lowercased()
+        // DHT22 sensor failures — translate to actionable user message
+        if lower.contains("dht") && (lower.contains("stale") || lower.contains("fail") ||
+                                      lower.contains("error") || lower.contains("invalid") ||
+                                      lower.contains("no valid")) {
+            return "Temperature sensor temporarily unavailable — check kennel sensor wiring"
+        }
+        // GPIO / hardware diagnostic messages — suppress (not user-relevant)
+        if lower.contains("gpio") || lower.contains("runtime error") ||
+           lower.contains("checksum") || lower.contains("traceback") {
+            return ""   // filtered out by the .filter { !$0.isEmpty } above
+        }
+        return cleanReason(reason)
     }
 
     private var visibleVaccineReminders: [String] {
@@ -474,8 +495,11 @@ struct DashboardView: View {
     private var sensorsGrid: some View {
         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
             sensorTile(
-                title: "Temperature", value: temperatureText,
-                symbol: "thermometer.medium", tint: .red.opacity(0.75),
+                title: "Temperature",
+                value: isTempStale ? "Unavailable" : temperatureText,
+                symbol: isTempStale ? "thermometer.trianglebadge.exclamationmark" : "thermometer.medium",
+                tint:   isTempStale ? .orange : .red.opacity(0.75),
+                subtitle: isTempStale ? "Sensor not responding" : nil,
                 chartType: .temperature
             )
             sensorTile(
@@ -602,6 +626,7 @@ struct DashboardView: View {
 
     private func sensorTile(
         title: String, value: String, symbol: String, tint: Color,
+        subtitle: String? = nil,
         chartType: ChartDataType? = nil
     ) -> some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -631,6 +656,7 @@ struct DashboardView: View {
                 .font(AppTheme.tileValueFont)
                 .lineLimit(2)
                 .minimumScaleFactor(0.8)
+                .foregroundStyle(subtitle != nil ? tint : .primary)
                 .contentTransition(.opacity)
                 .animation(.easeInOut(duration: 0.2), value: value)
 
@@ -639,12 +665,20 @@ struct DashboardView: View {
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
                 .padding(.top, 3)
+
+            if let subtitle {
+                Text(subtitle)
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(tint)
+                    .lineLimit(1)
+                    .padding(.top, 2)
+            }
         }
         .frame(maxWidth: .infinity, minHeight: AppTheme.sensorTileHeight, alignment: .topLeading)
         .padding(AppTheme.innerTilePadding)
         .background(
             RoundedRectangle(cornerRadius: AppTheme.tileRadius, style: .continuous)
-                .fill(AppTheme.warmTile)
+                .fill(subtitle != nil ? tint.opacity(0.06) : AppTheme.warmTile)
         )
         .onTapGesture {
             if let chartType { activeChart = chartType }
