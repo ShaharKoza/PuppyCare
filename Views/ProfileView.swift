@@ -8,6 +8,7 @@ struct ProfileView: View {
     @State private var selectedPhotoItem: PhotosPickerItem?
     @State private var breedSearchText         = ""
     @State private var showDeleteConfirmation  = false
+    @State private var showProfileSetup        = false
 
     private var filteredBreeds: [String] {
         DogDataOptions.prioritizedBreeds(searchText: breedSearchText)
@@ -246,21 +247,43 @@ struct ProfileView: View {
             // Walk reminders are now managed in the Routine tab
             routineRedirectHint
 
-            PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
-                HStack(spacing: 8) {
-                    Image(systemName: "camera.fill")
-                    Text("Change Photo")
+            HStack(spacing: 10) {
+                PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "camera.fill")
+                        Text("Change Photo")
+                    }
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(AppTheme.accentBrown)
+                    .padding(.horizontal, 14).padding(.vertical, 10)
+                    .background(AppTheme.accentBrown.opacity(0.10))
+                    .clipShape(Capsule())
                 }
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(AppTheme.accentBrown)
-                .padding(.horizontal, 14).padding(.vertical, 10)
-                .background(AppTheme.accentBrown.opacity(0.10))
-                .clipShape(Capsule())
+
+                Button {
+                    showProfileSetup = true
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "slider.horizontal.3")
+                        Text("Reconfigure Monitoring")
+                    }
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 14).padding(.vertical, 10)
+                    .background(Color(.systemFill))
+                    .clipShape(Capsule())
+                }
             }
             .padding(.top, 2)
         }
         .padding(AppTheme.cardPadding)
         .cardStyle()
+        .fullScreenCover(isPresented: $showProfileSetup) {
+            DogProfileSetupView {
+                showProfileSetup = false
+            }
+            .environmentObject(profileStore)
+        }
     }
 
     // MARK: - Temperature thresholds section
