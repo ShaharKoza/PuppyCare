@@ -326,6 +326,9 @@ final class AlertManager: ObservableObject {
     private var lastLightAlertDate:      Date?
     private var lastTempAlertDate:       Date?
     private var lastInactivityAlertDate: Date?
+    /// When the last motion-off transition was observed. Used to measure inactivity
+    /// duration without requiring the Pi to write a secondsSinceMotion field.
+    private var lastMotionStoppedDate:   Date?
 
     // Fixed cooldowns that don't depend on sensitivity
     private let lightCooldown:      TimeInterval = 300
@@ -557,8 +560,25 @@ final class AlertManager: ObservableObject {
     // Barking begins to develop around 3–4 weeks of age.
     // For brachycephalic dogs, breathing sounds (stridor/stertor) are clinically
     // relevant — the KY-038 microphone will pick these up as sound events.
+    //
+    // Gate logic:
+    //   soundAsStandaloneTrigger = true  → require barkDetected (adult standard mode)
+    //   soundAsStandaloneTrigger = false → sustainedSound OR barkDetected triggers the
+    //     check; only sustained events produce an alert. This ensures that neonatal cries
+    //     and brachycephalic respiratory sounds can alert even when bark_count_5s is low.
     private func checkSound(_ sensor: SensorData) {
-        guard sensor.barkDetected else { return }
+        let hasBark      = sensor.barkDetected
+        let hasSustained = sensor.sustainedSound
+
+        // Entry gate: decide which events are relevant for this profile.
+        if config.soundAsStandaloneTrigger {
+            // Standard adult mode — only respond to confirmed bark events.
+            guard hasBark else { return }
+        } else {
+            // Neonatal / brachycephalic / young puppy — sustained sound is
+            // the meaningful signal; bark events alone are not sufficient.
+            guard hasBark || hasSustained else { return }
+        }
 
         let now = Date()
         if let last = lastBarkAlertDate, now.timeIntervalSince(last) < effectiveBarkCooldown { return }
@@ -568,7 +588,7 @@ final class AlertManager: ObservableObject {
            let age = config.puppyAgeMonths, age < 1 {
             // Only alert on sustained vocalization — brief sounds are normal.
             // Sustained cry in a neonate = potential cold/hunger/pain distress.
-            guard sensor.sustainedSound else { return }
+            guard hasSustained else { return }
             append(AlertRecord(
                 type: .sound, severity: .critical,
                 title: "Puppy distress cry detected",
@@ -583,7 +603,7 @@ final class AlertManager: ObservableObject {
         // Reason: puppy whimpers and brachycephalic breathing sounds generate
         // frequent sensor events that are not true distress signals.
         if !config.soundAsStandaloneTrigger {
-            guard sensor.sustainedSound else { return }
+            guard hasSustained else { return }
 
             let detail: String
             if config.operationalProfile == .brachycephalic {
@@ -598,10 +618,10 @@ final class AlertManager: ObservableObject {
         }
 
         // ── Standard adult alert logic ────────────────────────────────────────
-        let severity: AlertSeverity = sensor.sustainedSound ? .warning : .info
+        let severity: AlertSeverity = hasSustained ? .warning : .info
         let detail: String
 
-        if sensor.sustainedSound {
+        if hasSustained {
             switch config.operationalProfile {
             case .seniorSensitive:
                 detail = "Sustained barking detected. Senior dogs may bark due to disorientation, pain, or anxiety — check on your dog."
@@ -620,13 +640,25 @@ final class AlertManager: ObservableObject {
 
     // ── Motion (edge-triggered) ────────────────────────────────────────────────
     private func checkMotion(_ sensor: SensorData) {
-        // Inactivity check runs on every update regardless of edge transition.
-        checkInactivity(sensor)
-
-        // Edge-triggered: fire only on false → true transition (motion started).
         let current = sensor.motionDetected
         defer { prevMotionDetected = current }
 
+        // Track motion stop/start transitions to drive the inactivity clock.
+        // prevMotionDetected still holds the OLD value here (defer fires at end of scope).
+        if let prev = prevMotionDetected, prev != current {
+            if current {
+                // Motion started → reset inactivity clock
+                lastMotionStoppedDate = nil
+            } else {
+                // Motion stopped → begin counting
+                lastMotionStoppedDate = Date()
+            }
+        }
+
+        // Inactivity check runs on every update regardless of edge transition.
+        checkInactivity(sensor)
+
+        // Edge alert: fire only on false → true transition (motion started).
         guard current != prevMotionDetected, current else { return }
 
         let now = Date()
@@ -648,12 +680,28 @@ final class AlertManager: ObservableObject {
     //   • Brachycephalic dogs are at risk of BOAS during rest → lower threshold.
     //   • Senior dogs sleep more than adults; but sudden lethargy may signal illness.
     // (Sources: Merck Vet Manual; BOAS clinical studies; canine geriatric care guidelines)
+    //
+    // NOTE: secondsSinceMotion is measured on the iOS side by tracking when motionDetected
+    // last transitioned false. This avoids requiring the Pi to write a separate counter field.
     private func checkInactivity(_ sensor: SensorData) {
         let threshold = config.inactiveAlertAfterSeconds
         guard threshold > 0 else { return }  // 0 = disabled (neonatal profile)
 
-        guard let secondsSince = sensor.secondsSinceMotion,
-              secondsSince >= threshold else { return }
+        // If dog is currently moving, no inactivity to report.
+        if sensor.motionDetected {
+            lastMotionStoppedDate = nil
+            return
+        }
+
+        // If we've never observed a motion→still transition (e.g. app just launched
+        // and dog was already still), start the clock conservatively from now.
+        if lastMotionStoppedDate == nil {
+            lastMotionStoppedDate = Date()
+        }
+
+        guard let stopped = lastMotionStoppedDate else { return }
+        let secondsSince = Int(Date().timeIntervalSince(stopped))
+        guard secondsSince >= threshold else { return }
 
         let now = Date()
         if let last = lastInactivityAlertDate,
