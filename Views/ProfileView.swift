@@ -4,9 +4,10 @@ import PhotosUI
 struct ProfileView: View {
     @EnvironmentObject var profileStore: ProfileStore
 
-    @State private var isEditing          = false
+    @State private var isEditing               = false
     @State private var selectedPhotoItem: PhotosPickerItem?
-    @State private var breedSearchText    = ""
+    @State private var breedSearchText         = ""
+    @State private var showDeleteConfirmation  = false
 
     private var filteredBreeds: [String] {
         DogDataOptions.prioritizedBreeds(searchText: breedSearchText)
@@ -49,6 +50,7 @@ struct ProfileView: View {
                 overviewCard
                 if isEditing { editableDetailsCard } else { compactDetailsCard }
                 aboutCard
+                dataCard
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, AppTheme.horizontalPadding)
@@ -398,6 +400,54 @@ struct ProfileView: View {
         .padding(14)
         .background(AppTheme.inputBackground)
         .clipShape(RoundedRectangle(cornerRadius: AppTheme.fieldRadius, style: .continuous))
+    }
+
+    // MARK: - Data card (delete account)
+
+    private var dataCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Data").font(AppTheme.sectionTitleFont)
+
+            Button {
+                showDeleteConfirmation = true
+            } label: {
+                HStack(spacing: 14) {
+                    ZStack {
+                        Circle()
+                            .fill(Color.red.opacity(0.10))
+                            .frame(width: 36, height: 36)
+                        Image(systemName: "trash.fill")
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundStyle(.red)
+                    }
+                    Text("Delete All Data")
+                        .font(AppTheme.bodyFont)
+                        .foregroundStyle(.red)
+                    Spacer(minLength: 0)
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(.secondary)
+                }
+                .padding(.horizontal, AppTheme.innerTilePadding)
+                .padding(.vertical, 13)
+                .background(AppTheme.warmTile)
+                .clipShape(RoundedRectangle(cornerRadius: AppTheme.tileRadius, style: .continuous))
+            }
+        }
+        .padding(AppTheme.cardPadding)
+        .cardStyle()
+        .confirmationDialog(
+            "Delete All Data?",
+            isPresented: $showDeleteConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button("Delete All Data", role: .destructive) {
+                profileStore.deleteAllData()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("This will erase your dog profile, all settings, and remove push notification access. This cannot be undone.")
+        }
     }
 
     // MARK: - About card

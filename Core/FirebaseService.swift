@@ -127,6 +127,10 @@ final class FirebaseService: ObservableObject {
         rootRef.child("kennel/fcm_token").setValue(token)
     }
 
+    func clearFCMToken() {
+        rootRef.child("kennel/fcm_token").removeValue()
+    }
+
     // MARK: - Camera capture request
 
     func requestCapture() {

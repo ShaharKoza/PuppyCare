@@ -203,6 +203,19 @@ final class ProfileStore: ObservableObject {
         saveImmediately()
     }
 
+    /// Erases all local and remote data — equivalent to "Delete Account".
+    /// Clears the profile, removes saved images, cancels reminders, and
+    /// removes the FCM token from Firebase so no further notifications are sent.
+    func deleteAllData() {
+        ReminderManager.shared.cancelAllReminders()
+        if !profile.profileImageFilename.isEmpty {
+            ImageStorageManager.shared.deleteImage(filename: profile.profileImageFilename)
+        }
+        FirebaseService.shared.clearFCMToken()
+        profile = .empty
+        UserDefaults.standard.removeObject(forKey: storageKey)
+    }
+
     /// Called by DogProfileSetupView after the user completes the setup flow.
     /// Applies auto-derived sensor thresholds and health reminders to the live profile.
     /// Existing manual overrides are preserved if manualOverridesEnabled is true.
