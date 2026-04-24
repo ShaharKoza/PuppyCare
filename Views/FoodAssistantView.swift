@@ -1,29 +1,28 @@
 import SwiftUI
 
-// MARK: - Status color (view-layer only — keeps FoodAssistantService SwiftUI-free)
-
 extension FoodSafetyStatus {
     var color: Color {
         switch self {
-        case .safe:    return Color.green
-        case .caution: return Color.orange
-        case .danger:  return Color.red
-        case .unknown: return Color(.systemGray)
+        case .safe:
+            return .green
+        case .caution:
+            return .orange
+        case .danger:
+            return .red
+        case .unknown:
+            return Color(.systemGray)
         }
     }
 }
-
-// MARK: - Food Assistant View
 
 struct FoodAssistantView: View {
     @EnvironmentObject var profileStore: ProfileStore
     @FocusState private var isInputFocused: Bool
 
-    @State private var queryText  = ""
-    @State private var result: FoodAssistantResult? = nil
-    @State private var isLoading  = false
+    @State private var queryText = ""
+    @State private var result: FoodAssistantResult?
+    @State private var isLoading = false
 
-    // Swap to a real AI service here without changing any other code.
     private let service: FoodAssistantQuerying = FoodAssistantService.shared
 
     private let suggestions = [
@@ -35,8 +34,6 @@ struct FoodAssistantView: View {
         let n = profileStore.profile.name.trimmingCharacters(in: .whitespacesAndNewlines)
         return n.isEmpty ? "your dog" : n.capitalized
     }
-
-    // MARK: - Body
 
     var body: some View {
         ScrollView(showsIndicators: false) {
@@ -69,24 +66,19 @@ struct FoodAssistantView: View {
         .animation(.easeInOut(duration: 0.3), value: result == nil)
     }
 
-    // MARK: - Header
-
     private var headerSection: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text("Food Assistant")
                 .font(AppTheme.titleFont)
+
             Text("Ask what \(dogName) can safely eat")
                 .font(AppTheme.bodyFont)
                 .foregroundStyle(.secondary)
         }
     }
 
-    // MARK: - Input card
-
     private var inputCard: some View {
         VStack(spacing: 12) {
-
-            // Text field row
             HStack(spacing: 10) {
                 Image(systemName: "magnifyingglass")
                     .font(.system(size: 16, weight: .medium))
@@ -100,14 +92,15 @@ struct FoodAssistantView: View {
                     .textInputAutocapitalization(.never)
                     .onSubmit { askQuestion() }
                     .onChange(of: queryText) { _, _ in
-                        // Clear stale result when the user edits the query
-                        if result != nil { result = nil }
+                        if result != nil {
+                            result = nil
+                        }
                     }
 
                 if !queryText.isEmpty {
                     Button {
                         queryText = ""
-                        result    = nil
+                        result = nil
                     } label: {
                         Image(systemName: "xmark.circle.fill")
                             .font(.system(size: 16))
@@ -121,8 +114,9 @@ struct FoodAssistantView: View {
             .background(AppTheme.warmTile)
             .clipShape(RoundedRectangle(cornerRadius: AppTheme.fieldRadius, style: .continuous))
 
-            // Ask button
-            Button { askQuestion() } label: {
+            Button {
+                askQuestion()
+            } label: {
                 HStack(spacing: 8) {
                     if isLoading {
                         ProgressView()
@@ -132,6 +126,7 @@ struct FoodAssistantView: View {
                         Image(systemName: "sparkles")
                             .font(.system(size: 14, weight: .semibold))
                     }
+
                     Text(isLoading ? "Thinking…" : "Ask PuppyCare")
                         .font(.system(size: 16, weight: .semibold))
                 }
@@ -140,8 +135,8 @@ struct FoodAssistantView: View {
                 .frame(height: 50)
                 .background(
                     (queryText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isLoading)
-                        ? AppTheme.accentBrown.opacity(0.40)
-                        : AppTheme.accentBrown
+                    ? AppTheme.accentBrown.opacity(0.40)
+                    : AppTheme.accentBrown
                 )
                 .clipShape(RoundedRectangle(cornerRadius: AppTheme.fieldRadius, style: .continuous))
                 .animation(.easeInOut(duration: 0.15), value: isLoading)
@@ -151,8 +146,6 @@ struct FoodAssistantView: View {
         .padding(AppTheme.cardPadding)
         .cardStyle()
     }
-
-    // MARK: - Suggestion chips
 
     private var suggestionsSection: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -188,18 +181,15 @@ struct FoodAssistantView: View {
         .buttonStyle(.plain)
     }
 
-    // MARK: - Result card
-
-    @ViewBuilder
     private func resultCard(_ r: FoodAssistantResult) -> some View {
         VStack(alignment: .leading, spacing: 0) {
-
-            // Coloured status banner
             HStack(spacing: 8) {
                 Image(systemName: r.status.icon)
                     .font(.system(size: 14, weight: .bold))
+
                 Text(r.status.label)
                     .font(.system(size: 14, weight: .bold))
+
                 Spacer(minLength: 0)
             }
             .foregroundStyle(r.status.color)
@@ -207,9 +197,7 @@ struct FoodAssistantView: View {
             .padding(.vertical, 12)
             .background(r.status.color.opacity(0.10))
 
-            // Body
             VStack(alignment: .leading, spacing: 12) {
-
                 Text(r.headline)
                     .font(AppTheme.sectionTitleFont)
 
@@ -228,6 +216,7 @@ struct FoodAssistantView: View {
                                     .font(.system(size: 5))
                                     .foregroundStyle(r.status.color)
                                     .padding(.top, 7)
+
                                 Text(tip)
                                     .font(.system(size: 14, weight: .medium))
                                     .foregroundStyle(.primary)
@@ -248,14 +237,13 @@ struct FoodAssistantView: View {
         .shadow(color: AppTheme.softShadow, radius: 10, y: 4)
     }
 
-    // MARK: - Disclaimer
-
     private var disclaimer: some View {
         HStack(alignment: .top, spacing: 8) {
             Image(systemName: "info.circle")
                 .font(.system(size: 13, weight: .regular))
                 .foregroundStyle(.tertiary)
                 .padding(.top, 1)
+
             Text("General guidance only — not a substitute for professional veterinary advice. Always consult your vet if you are unsure about your dog's diet or health.")
                 .font(.system(size: 12, weight: .regular))
                 .foregroundStyle(.tertiary)
@@ -266,20 +254,18 @@ struct FoodAssistantView: View {
         .clipShape(RoundedRectangle(cornerRadius: AppTheme.tileRadius, style: .continuous))
     }
 
-    // MARK: - Action
-
     private func askQuestion() {
         let trimmed = queryText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
 
         isInputFocused = false
-        isLoading      = true
-        result         = nil
+        isLoading = true
+        result = nil
 
         Task {
-            let r = await service.query(trimmed)
+            let response = await service.query(trimmed)
             withAnimation(.spring(duration: 0.4)) {
-                result    = r
+                result = response
                 isLoading = false
             }
         }

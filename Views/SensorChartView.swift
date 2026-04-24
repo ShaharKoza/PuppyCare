@@ -124,6 +124,8 @@ struct SensorChartView: View {
 
             if chartPoints.isEmpty {
                 emptyState
+            } else if chartPoints.count == 1 {
+                singlePointState
             } else {
                 chart
             }
@@ -183,7 +185,23 @@ struct SensorChartView: View {
                 .foregroundStyle(dataType.color.opacity(0.35))
             Text("No data yet")
                 .font(AppTheme.bodyTitleFont)
-            Text("Readings appear here as the kennel sensor\nreports in. Check back in a few minutes.")
+            Text("Readings appear here as the kennel sensor\nreports in. History builds while the app is open.")
+                .font(AppTheme.captionFont)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 40)
+    }
+
+    private var singlePointState: some View {
+        VStack(spacing: 12) {
+            Image(systemName: "waveform.path.ecg")
+                .font(.system(size: 36))
+                .foregroundStyle(dataType.color.opacity(0.45))
+            Text("Building the chart…")
+                .font(AppTheme.bodyTitleFont)
+            Text("Got the first reading. One more sample and the\n24-hour trend will start rendering.")
                 .font(AppTheme.captionFont)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)

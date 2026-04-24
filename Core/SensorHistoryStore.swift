@@ -20,7 +20,17 @@ struct SensorReading: Codable, Identifiable {
 // MARK: - Store
 
 /// Accumulates timestamped sensor readings for the last 48 hours.
-/// Records at most one sample every 5 minutes to avoid bloat.
+///
+/// Design:
+/// - Records at most one sample per minute. This gives a usable chart after
+///   just 2–3 minutes of foreground use, instead of the 10–15 minutes the
+///   previous 5-minute throttle required.
+/// - Keeps up to 48 h of samples (2880 points) — still trivial on disk/memory.
+/// - Uses an internal "last-good" cache for temperature and humidity, so a
+///   transient `null` from the Pi (e.g. during a DHT retry) does NOT create
+///   holes in the chart. Both fields of every stored SensorReading are either
+///   the freshest real value or nil only when we have truly never seen one.
+///
 /// Thread-safe via @MainActor — call from FirebaseService's main-actor Task blocks.
 @MainActor
 final class SensorHistoryStore: ObservableObject {
@@ -28,12 +38,16 @@ final class SensorHistoryStore: ObservableObject {
 
     @Published private(set) var readings: [SensorReading] = []
 
-    // One sample every 5 minutes, keep 48 h of data max
-    private let recordInterval: TimeInterval = 300
+    // One sample per minute, keep 48 h of data max.
+    private let recordInterval: TimeInterval = 60
     private let retentionHours: Double       = 48
-    private let maxReadings                  = 576
+    private let maxReadings                  = 2880
 
     private var lastRecordDate: Date?
+
+    // Sticky last-good values. Protect the chart from per-tick nulls.
+    private var lastGoodTemperature: Double?
+    private var lastGoodHumidity:    Double?
 
     private let saveURL: URL = {
         let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first
@@ -46,19 +60,37 @@ final class SensorHistoryStore: ObservableObject {
 
     private init() {
         loadFromDisk()
+        // Seed the sticky cache from the most recent persisted reading so that
+        // a fresh app launch doesn't start from nil for a minute.
+        if let last = readings.last {
+            lastGoodTemperature = last.temperature ?? lastGoodTemperature
+            lastGoodHumidity    = last.humidity    ?? lastGoodHumidity
+        }
         setupDebouncedSave()
     }
 
     // MARK: - Public API
 
-    /// Call this every time a sensor update arrives. Internally throttled.
+    /// Call this every time a sensor update arrives. Internally throttled
+    /// to one sample per `recordInterval`, and backfills nil fields from the
+    /// sticky last-good cache so the chart never has spurious gaps.
     func record(temperature: Double?, humidity: Double?) {
-        guard temperature != nil || humidity != nil else { return }
+        // Update sticky cache whenever we get a real value.
+        if let temperature { lastGoodTemperature = temperature }
+        if let humidity    { lastGoodHumidity    = humidity    }
+
+        // Nothing has ever been good? Nothing to record.
+        guard lastGoodTemperature != nil || lastGoodHumidity != nil else { return }
 
         let now = Date()
         if let last = lastRecordDate, now.timeIntervalSince(last) < recordInterval { return }
 
-        readings.append(SensorReading(temperature: temperature, humidity: humidity))
+        readings.append(
+            SensorReading(
+                temperature: temperature ?? lastGoodTemperature,
+                humidity:    humidity    ?? lastGoodHumidity
+            )
+        )
         lastRecordDate = now
         pruneOldReadings()
         saveTrigger.send()

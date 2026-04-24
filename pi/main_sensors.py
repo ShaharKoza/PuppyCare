@@ -72,6 +72,19 @@ SLEEP_DARK_QUIET_STILL = 420  # seconds of dark+quiet+still before sleep=True
 
 FIREBASE_UPDATE_INTERVAL = 5  # seconds between kennel/sensors pushes
 
+# ── Camera snapshot refresh ──────────────────────────────────────────────────
+# We don't upload images from the Pi; the USB webcam is exposed as an MJPEG
+# stream on port 8081 by puppycare-camera.service. Instead, the Pi writes a
+# fresh snapshot URL (with a cache-busting timestamp) to kennel/camera, which
+# causes iOS's AsyncImage to reload a new frame from /?action=snapshot.
+CAMERA_STREAM_HOST              = "raspberrypi.local"   # mDNS name of the Pi on the LAN
+CAMERA_STREAM_PORT              = 8081
+CAMERA_EVENT_COOLDOWN_SEC       = 8.0    # min gap between event-triggered refreshes
+CAMERA_PERIODIC_SEC             = 30.0   # heartbeat refresh when idle
+CAMERA_POLL_INTERVAL            = 0.5    # state-watch cadence
+CAMERA_HEAVY_MOTION_COUNT       = 3      # "very heavy" = this many distinct PIR hits...
+CAMERA_HEAVY_MOTION_WINDOW_SEC  = 10.0   # ...within this window
+
 # ─────────────────────────── Firebase init ────────────────────────────────────
 cred = credentials.Certificate("/home/pi/puppycare-firebase-key.json")
 firebase_admin.initialize_app(cred, {
@@ -436,15 +449,21 @@ def firebase_writer_loop():
             snap = dict(state)   # shallow copy under lock
 
         # ── kennel/sensors ────────────────────────────────────────────────────
+        # Always include the stable fields.
         sensors_payload = {
-            "temperature": snap["temperature"],
-            "humidity":    snap["humidity"],
             "light":       "light" if snap["light"] else "dark",
             "motion":      snap["motion"],
             "sound":       snap["sound"],
             "sleeping":    snap["sleeping"],
             "timestamp":   datetime.now().strftime("%H:%M:%S"),
         }
+        # Only include temperature / humidity when we have a valid reading.
+        # Using update() instead of set() means a previously-written value
+        # stays in Firebase if the DHT hasn't returned a new one yet — iOS
+        # continues to display the last good reading rather than "--".
+        if snap["temperature"] is not None:
+            sensors_payload["temperature"] = snap["temperature"]
+            sensors_payload["humidity"]    = snap["humidity"]
 
         # ── kennel/sound ──────────────────────────────────────────────────────
         sound_payload = {
@@ -474,7 +493,9 @@ def firebase_writer_loop():
         }
 
         try:
-            db_ref.child("sensors").set(sensors_payload)
+            # update() merges into the existing node — preserves temperature/humidity
+            # when the DHT hasn't returned a new reading since the last Firebase push.
+            db_ref.child("sensors").update(sensors_payload)
             db_ref.child("sound").set(sound_payload)
             db_ref.child("alert").set(alert_payload)
             db_ref.child("diagnostics").set(diag_payload)
@@ -482,6 +503,81 @@ def firebase_writer_loop():
             log.error("Firebase write error: %s", e)
 
         time.sleep(FIREBASE_UPDATE_INTERVAL)
+
+# ─────────────────────────── Camera snapshot trigger ─────────────────────────
+
+def _publish_camera(reason: str):
+    """Write a fresh, cache-busted snapshot URL to kennel/camera."""
+    ts  = int(time.time() * 1000)
+    url = (f"http://{CAMERA_STREAM_HOST}:{CAMERA_STREAM_PORT}"
+           f"/?action=snapshot&t={ts}")
+    try:
+        db_ref.child("camera").set({
+            "url":       url,
+            "reason":    reason,
+            "timestamp": datetime.utcnow().isoformat() + "Z",
+        })
+        log.info("Camera snapshot refreshed (%s)", reason)
+    except Exception as e:
+        log.error("Camera publish failed: %s", e)
+
+def camera_trigger_loop():
+    """
+    Refresh kennel/camera.url whenever something worth seeing happens.
+
+    Triggers:
+      • rising edge of bark_detected (≥3 barks in 5 s)
+      • heavy motion: ≥ CAMERA_HEAVY_MOTION_COUNT debounced PIR events
+        within CAMERA_HEAVY_MOTION_WINDOW_SEC
+      • periodic heartbeat every CAMERA_PERIODIC_SEC
+
+    Event-triggered refreshes are throttled by CAMERA_EVENT_COOLDOWN_SEC so
+    a long bark storm or a very active dog doesn't hammer Firebase or the
+    webcam. The iOS AsyncImage reloads whenever the URL's query string
+    changes — hence the millisecond timestamp on every publish.
+    """
+    prev_bark     = False
+    prev_motion   = False
+    motion_events = deque()
+    last_event_ts = 0.0
+
+    # Prime the URL on startup so the app has something to render immediately.
+    _publish_camera("startup")
+    last_periodic = time.monotonic()
+
+    while True:
+        with state_lock:
+            bark_now   = state["bark_detected"]
+            motion_now = state["motion"]
+
+        now = time.monotonic()
+
+        # Rising edges
+        bark_edge   = bark_now   and not prev_bark
+        motion_edge = motion_now and not prev_motion
+        prev_bark   = bark_now
+        prev_motion = motion_now
+
+        if motion_edge:
+            motion_events.append(now)
+        cutoff = now - CAMERA_HEAVY_MOTION_WINDOW_SEC
+        while motion_events and motion_events[0] < cutoff:
+            motion_events.popleft()
+        heavy_motion = len(motion_events) >= CAMERA_HEAVY_MOTION_COUNT
+
+        if bark_edge and (now - last_event_ts) >= CAMERA_EVENT_COOLDOWN_SEC:
+            _publish_camera("bark")
+            last_event_ts = now
+        elif heavy_motion and (now - last_event_ts) >= CAMERA_EVENT_COOLDOWN_SEC:
+            _publish_camera("heavy_motion")
+            last_event_ts = now
+            motion_events.clear()   # reset window after firing
+
+        if (now - last_periodic) >= CAMERA_PERIODIC_SEC:
+            _publish_camera("periodic")
+            last_periodic = now
+
+        time.sleep(CAMERA_POLL_INTERVAL)
 
 # ─────────────────────────── main ─────────────────────────────────────────────
 
@@ -495,6 +591,7 @@ def main():
         threading.Thread(target=light_loop,           name="light",  daemon=True),
         threading.Thread(target=sleep_loop,           name="sleep",  daemon=True),
         threading.Thread(target=firebase_writer_loop, name="firebase", daemon=True),
+        threading.Thread(target=camera_trigger_loop, name="camera", daemon=True),
     ]
 
     for t in threads:

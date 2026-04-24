@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- App Transport Security:
+         NSAllowsLocalNetworking permits cleartext HTTP loads ONLY to
+         local network addresses (.local hostnames, RFC1918 IPs).
+         It is far narrower than NSAllowsArbitraryLoads, which App Store
+         review penalises.  This is exactly what we need for an MJPEG
+         stream from a Raspberry Pi on the same Wi-Fi. -->
+    <key>NSAppTransportSecurity</key>
+    <dict>
+        <key>NSAllowsLocalNetworking</key>
+        <true/>
+    </dict>
+</dict>
+</plist>
