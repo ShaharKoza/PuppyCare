@@ -333,7 +333,7 @@ SmartKennel/
 - [ ] Multi-dog / multi-kennel support with namespaced Firebase paths
 - [ ] Historical sensor graphs (24h, 7d, 30d) backed by Firebase or InfluxDB
 - [ ] AI-powered feeding recommendations using weight, breed, and activity data
-- [ ] Integration with a real LLM for the Food Assistant (Claude / GPT-4)
+- [ ] Integration with a real LLM backend for the Food Assistant
 - [ ] Apple Watch complication for kennel status at a glance
 - [ ] Widget extension for the Lock Screen / Home Screen
 - [ ] Export alert history as CSV or PDF report

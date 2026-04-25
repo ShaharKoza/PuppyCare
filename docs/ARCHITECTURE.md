@@ -123,7 +123,7 @@ Manages the `DogProfile` value type and coordinates three side effects on profil
 
 ### `FoodAssistantService.swift`
 
-Implements a `FoodAssistantQuerying` protocol with a local rule-based lookup table covering common foods and their dog-safety status. The protocol design means the entire service can be swapped for a real LLM backend (Claude, GPT-4) without changing any view code.
+Implements a `FoodAssistantQuerying` protocol with a local rule-based lookup table covering common foods and their dog-safety status. The protocol design means the entire service can be swapped for a real LLM backend without changing any view code.
 
 ```swift
 protocol FoodAssistantQuerying {
