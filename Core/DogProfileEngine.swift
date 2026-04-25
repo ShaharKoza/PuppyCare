@@ -306,28 +306,68 @@ enum DogProfileEngine {
             return Double(comps.month ?? 12)
         }()
 
-        // ── Rabies (mandatory in Israel from 3 months, yearly) ──────────────
+        // ── Rabies — the ONLY legally mandatory vaccine in Israel ──────────
+        //
+        // Legal basis: חוק להסדרת הפיקוח על כלבים, התשס"ג–2002 §3 — every dog
+        // 3 months and older must be vaccinated against rabies and re-vaccinated
+        // annually. All other vaccines (DHPP, Bordetella, Lepto, deworming) are
+        // strongly recommended by veterinarians but NOT legally mandatory, and
+        // therefore intentionally not surfaced here.
+        //
+        // Date logic, by birth date `bd`:
+        //   firstDue = bd + 3 months
+        //   • today < firstDue → first vaccination upcoming (due = firstDue)
+        //   • today ≥ firstDue → annual booster cycle. We compute how many
+        //     anniversaries have already passed and surface the NEXT one as
+        //     the due date — anchored to the dog's actual life cycle, not to
+        //     "today + 1 year". A 5-year-old dog born in July with first dose
+        //     in October now has its next due date in October, not "1 year
+        //     from this exact moment".
+        //   • The detail string also tells the user how many doses they should
+        //     already have administered for the dog's current age, so an owner
+        //     who skipped a year sees it immediately.
         if let bd = birthDate {
-            // First rabies due at 3 months of age
-            let firstRabiesDue = cal.date(byAdding: .month, value: 3, to: bd) ?? today
-            let isFirstDue     = firstRabiesDue > today
+            let firstDue = cal.date(byAdding: .month, value: 3, to: bd) ?? today
 
-            items.append(HealthReminderItem(
-                key:         "rabies_first",
-                title:       isFirstDue ? "First Rabies Vaccine Due" : "Annual Rabies Vaccine",
-                detail:      "Mandatory in Israel from 3 months of age. Repeat annually.",
-                dueDate:     isFirstDue ? firstRabiesDue : cal.date(byAdding: .year, value: 1,
-                                             to: max(firstRabiesDue, today)),
-                isActive:    true,
-                isMandatory: true,
-                category:    .rabies
-            ))
+            if today < firstDue {
+                // Puppy younger than 3 months — first dose upcoming.
+                items.append(HealthReminderItem(
+                    key:         "rabies_first",
+                    title:       "First Rabies Vaccine — Upcoming",
+                    detail:      "Mandatory in Israel by law from 3 months of age (חוק הסדרת הפיקוח על כלבים, התשס\"ג–2002). Annual booster required for life.",
+                    dueDate:     firstDue,
+                    isActive:    true,
+                    isMandatory: true,
+                    category:    .rabies
+                ))
+            } else {
+                // Past 3 months — compute next anniversary and the count of
+                // doses that should already exist on the dog's record.
+                let yearsSinceFirstDue = cal.dateComponents([.year], from: firstDue, to: today).year ?? 0
+                let nextDue = cal.date(byAdding: .year, value: yearsSinceFirstDue + 1, to: firstDue) ?? today
+
+                // Dose count owed: 1 first + N annual boosters at every elapsed anniversary.
+                let dosesExpected = 1 + yearsSinceFirstDue
+                let ageDescription = formatAge(months: Int(ageMonths))
+
+                items.append(HealthReminderItem(
+                    key:         "rabies_first",
+                    title:       "Annual Rabies Vaccine",
+                    detail:      "Mandatory in Israel by law (חוק הסדרת הפיקוח על כלבים, התשס\"ג–2002). " +
+                                 "Your dog is \(ageDescription) — \(dosesExpected) rabies vaccination\(dosesExpected == 1 ? "" : "s") should already be on the dog's record (1 first dose at 3 months + \(yearsSinceFirstDue) annual booster\(yearsSinceFirstDue == 1 ? "" : "s")). " +
+                                 "Next annual booster is due on the anniversary below.",
+                    dueDate:     nextDue,
+                    isActive:    true,
+                    isMandatory: true,
+                    category:    .rabies
+                ))
+            }
         } else {
-            // Birth date unknown — generic reminder
+            // Birth date unknown — generic reminder.
             items.append(HealthReminderItem(
                 key:         "rabies_generic",
                 title:       "Rabies Vaccination Status",
-                detail:      "Enter birth date to get a precise rabies schedule. Mandatory in Israel from 3 months.",
+                detail:      "Enter your dog's birth date to compute the exact rabies schedule. Mandatory in Israel by law from 3 months of age.",
                 dueDate:     nil,
                 isActive:    true,
                 isMandatory: true,
@@ -335,124 +375,25 @@ enum DogProfileEngine {
             ))
         }
 
-        // ── Core Puppy Vaccines ───────────────────────────────────────────────
-        if operationalProfile == .youngPuppy || ageMonths < 5 {
-            let seriesStartAge: Double = 1.5  // 6 weeks
-
-            if ageMonths < seriesStartAge {
-                items.append(HealthReminderItem(
-                    key:         "core_series_upcoming",
-                    title:       "Puppy Core Vaccine Series — Upcoming",
-                    detail:      "The first dose of the core puppy vaccine series is recommended at 6–8 weeks of age.",
-                    dueDate:     birthDate.map { cal.date(byAdding: .weekOfYear, value: 6, to: $0) ?? today },
-                    isActive:    true,
-                    isMandatory: true,
-                    category:    .coreVaccine
-                ))
-            } else if ageMonths < 4 {
-                items.append(HealthReminderItem(
-                    key:         "core_series_active",
-                    title:       "Puppy Core Vaccine Series — In Progress",
-                    detail:      "Series of 3–4 doses every 2–4 weeks, with the final dose at or after 16 weeks. Track each dose with your vet.",
-                    dueDate:     nil,
-                    isActive:    true,
-                    isMandatory: true,
-                    category:    .coreVaccine
-                ))
-            } else if ageMonths < 5 {
-                items.append(HealthReminderItem(
-                    key:         "core_series_overdue_check",
-                    title:       "⚠️ Core Vaccine Series — Check Status",
-                    detail:      "Puppy is over 16 weeks. If the core series is incomplete, this is a high-priority item. Contact your veterinarian.",
-                    dueDate:     today,
-                    isActive:    true,
-                    isMandatory: true,
-                    category:    .coreVaccine
-                ))
-            }
-
-            // Booster at 6–12 months
-            if let bd = birthDate {
-                let boosterDue = cal.date(byAdding: .month, value: 9, to: bd) ?? today
-                items.append(HealthReminderItem(
-                    key:         "core_booster",
-                    title:       "Core Vaccine Booster",
-                    detail:      "First booster recommended at 6–12 months after completing the puppy series.",
-                    dueDate:     boosterDue,
-                    isActive:    boosterDue > today,
-                    isMandatory: false,
-                    category:    .coreVaccine
-                ))
-            }
-        }
-
-        // ── Vet Checkup ───────────────────────────────────────────────────────
-        let vetIntervalMonths: Int
-        switch operationalProfile {
-        case .seniorSensitive: vetIntervalMonths = 6
-        default:               vetIntervalMonths = 12
-        }
-
-        items.append(HealthReminderItem(
-            key:         "vet_checkup",
-            title:       "Routine Veterinary Check-up",
-            detail:      operationalProfile == .seniorSensitive
-                ? "Senior/sensitive dogs benefit from a check-up every 6 months."
-                : "Annual routine check-up recommended.",
-            dueDate:     cal.date(byAdding: .month, value: vetIntervalMonths, to: today),
-            isActive:    true,
-            isMandatory: false,
-            category:    .vetCheckup
-        ))
-
-        // ── Park Worm (quarterly for outdoor dogs) ───────────────────────────
-        let isOutdoor = lifestyleFlags.contains(.yardAccess) ||
-                        lifestyleFlags.contains(.boardingRegular) ||
-                        lifestyleFlags.contains(.groupTraining)
-
-        if isOutdoor {
-            items.append(HealthReminderItem(
-                key:         "park_worm",
-                title:       "Park Worm Prevention",
-                detail:      "Quarterly deworming recommended for dogs with regular outdoor / park exposure in Israel.",
-                dueDate:     cal.date(byAdding: .month, value: 3, to: today),
-                isActive:    true,
-                isMandatory: false,
-                category:    .parkWorm
-            ))
-        }
-
-        // ── Kennel Cough ─────────────────────────────────────────────────────
-        let needsKennelCough = lifestyleFlags.contains(.boardingRegular) ||
-                               lifestyleFlags.contains(.groupTraining)   ||
-                               lifestyleFlags.contains(.frequentDogContact)
-
-        if needsKennelCough {
-            items.append(HealthReminderItem(
-                key:         "kennel_cough",
-                title:       "Kennel Cough Vaccine",
-                detail:      "Recommended for dogs in boarding, group training, or frequent dog-contact environments.",
-                dueDate:     cal.date(byAdding: .month, value: 12, to: today),
-                isActive:    true,
-                isMandatory: false,
-                category:    .kennelCough
-            ))
-        }
-
-        // ── Leptospirosis (risk-based: North Israel / Golan / water exposure) ─
-        if regionRisk.leptospirosisRisk {
-            items.append(HealthReminderItem(
-                key:         "lepto",
-                title:       "Leptospirosis Vaccine",
-                detail:      "Recommended for dogs in northern Israel, the Golan, or areas with water-exposure risk. Discuss timing with your vet.",
-                dueDate:     cal.date(byAdding: .month, value: 12, to: today),
-                isActive:    true,
-                isMandatory: false,
-                category:    .leptospirosis
-            ))
-        }
+        // NOTE: Other vaccines (core DHPP series, kennel cough, leptospirosis,
+        // park-worm prevention, routine vet checkup) are intentionally NOT
+        // emitted from this engine. They are strongly recommended by veterinarians
+        // but not legally mandatory in Israel, and the Vaccine Reminders card on
+        // the Dashboard is scoped to legal requirements only — to avoid creating
+        // "false-positive" reminders that confuse the owner about what is
+        // actually obligatory.
 
         return DerivedHealthReminders(items: items)
+    }
+
+    /// Friendly age formatter — "8 months", "1 year 2 months", "5 years".
+    private static func formatAge(months: Int) -> String {
+        guard months > 0 else { return "less than 1 month" }
+        if months < 12 { return "\(months) month\(months == 1 ? "" : "s")" }
+        let years     = months / 12
+        let remMonths = months % 12
+        if remMonths == 0 { return "\(years) year\(years == 1 ? "" : "s")" }
+        return "\(years) year\(years == 1 ? "" : "s") \(remMonths) month\(remMonths == 1 ? "" : "s")"
     }
 
     // ─────────────────────────────────────────────────────────────────────────
