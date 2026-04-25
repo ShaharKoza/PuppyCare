@@ -177,12 +177,12 @@
         <article class="feat-card reveal reveal-d2">
           <div class="feat-icon" aria-hidden="true">🏃</div>
           <h3>Motion &amp; Sleep Detection</h3>
-          <p><strong>HC-SR501 / AM312 PIR</strong> — Fresnel-lens dome, 3-wire (VCC / OUT / GND), GPIO 27, active HIGH. 5 s boot warm-up, 10 s holdoff per trigger. Sleep state derived on the Pi: dark + quiet + still for 420 s continuous.</p>
+          <p><strong>HC-SR501 PIR</strong> — Fresnel-lens dome, 3-wire (VCC / OUT / GND), GPIO 27, active HIGH. 5 s boot warm-up, 10 s holdoff per trigger. Sleep state derived on the Pi: quiet + still for 420 s continuous.</p>
         </article>
         <article class="feat-card reveal reveal-d3">
           <div class="feat-icon" aria-hidden="true">🔊</div>
           <h3>Sound &amp; Bark Analysis</h3>
-          <p><strong>KY-038</strong> — electret microphone + LM393 comparator, GPIO 17. 5 s sliding window classifies events: ≥3 barks = bark_detected, ≥1.5 s continuous HIGH = sustained_sound (warning escalation). Sensitivity trimmer adjusts threshold.</p>
+          <p><strong>KY-038</strong> — electret microphone + LM393 comparator, GPIO 17. 5 s sliding window classifies events: ≥3 barks = bark_detected, ≥1.5 s continuous HIGH = sustained_sound (Critical escalation). Sensitivity trimmer adjusts threshold.</p>
         </article>
         <article class="feat-card reveal reveal-d1">
           <div class="feat-icon" aria-hidden="true">💡</div>
@@ -192,7 +192,7 @@
         <article class="feat-card reveal reveal-d2">
           <div class="feat-icon" aria-hidden="true">🚨</div>
           <h3>3-Tier Alert System</h3>
-          <p>Bark → <strong>Critical</strong> immediately. Motion → Warning. Bark + Motion within 30 s → <strong>Critical</strong> (Activity + noise). Temperature out of range → Warning / Critical by severity. Cloud Function delivers FCM push the moment the level escalates.</p>
+          <p>Bark → <strong>Critical</strong> immediately. Motion → Warning. Bark + Motion within 30 s → <strong>Critical</strong> (Activity + noise). The dashboard also surfaces a live "happening now" Critical banner the moment motion + sound are both active on the tiles, without waiting for the alert pipeline to escalate. Cloud Function delivers FCM push the moment the level changes.</p>
         </article>
         <article class="feat-card reveal reveal-d3">
           <div class="feat-icon" aria-hidden="true">📷</div>
@@ -284,8 +284,8 @@
         </div>
         <div class="threshold-row">
           <span class="threshold-label">Motion Only</span>
-          <span class="threshold-range range-normal">Brief activity</span>
-          <span class="threshold-range range-emergency">Sustained activity = Warning</span>
+          <span class="threshold-range range-normal">Quiet kennel</span>
+          <span class="threshold-range range-emergency">Any motion edge = Warning</span>
         </div>
         <div class="threshold-row">
           <span class="threshold-label">Ambient Light (LDR)</span>
@@ -297,7 +297,7 @@
           <span class="threshold-range range-normal">Quiet + still</span>
           <span class="threshold-range range-emergency">Requires 420 s inactivity</span>
         </div>
-        <p class="threshold-note">Thresholds from <code>main_sensors.py</code> v2 (Puppy-Safe Edition) · Sources: USDA APHIS · Purdue Canine Welfare · VCA Animal Hospitals · Royal Canin Academy · NIH/PMC</p>
+        <p class="threshold-note">Thresholds from <code>main_sensors.py</code> Production Edition · Sources: USDA APHIS · Purdue Canine Welfare · VCA Animal Hospitals · Royal Canin Academy · NIH/PMC</p>
       </div>
 
     </div>
@@ -489,7 +489,7 @@
             </li>
             <li>
               <span class="tech-key">Pi Script — v2</span>
-              <span class="tech-val">Python · <code>main_sensors.py</code> Puppy-Safe Edition v2 · multi-threaded DHT reader · AlertEngine with puppy age tiers (young / older)</span>
+              <span class="tech-val">Python · <code>main_sensors.py</code> Production Edition · multi-threaded sensor loops (DHT, sound, PIR, light, sleep, writer, camera) · streak counters with decay grace · 3-tier AlertEngine with puppy age tiers</span>
             </li>
           </ul>
         </article>
@@ -534,12 +534,20 @@
               <span class="tech-val">Single node overwritten only when level or reasons change (deduplicated writes) — iOS alert tab derives its history from this stream client-side</span>
             </li>
             <li>
+              <span class="tech-key">Heartbeat — <code>kennel/heartbeat</code></span>
+              <span class="tech-val">Pi writes <code>{ timestamp, epoch_ms }</code> every writer cycle. iOS surfaces a "Pi offline" indicator when the value goes stale for &gt; 60 s — so the user knows when the readings have stopped updating</span>
+            </li>
+            <li>
               <span class="tech-key">Detail paths</span>
-              <span class="tech-val"><code>kennel/sensors</code> · <code>kennel/sound</code> · <code>kennel/alert</code> · <code>kennel/camera</code> · <code>kennel/diagnostics</code></span>
+              <span class="tech-val"><code>kennel/sensors</code> · <code>kennel/sound</code> · <code>kennel/alert</code> · <code>kennel/camera</code> · <code>kennel/heartbeat</code> · <code>kennel/diagnostics</code></span>
             </li>
             <li>
               <span class="tech-key">Camera</span>
               <span class="tech-val">Captures every 30 s (periodic) + on every PIR trigger. Written to <code>kennel/camera</code> by <code>camera.py</code></span>
+            </li>
+            <li>
+              <span class="tech-key">FCM push notifications</span>
+              <span class="tech-val">Cloud Function on <code>onValueWritten("/kennel/alert")</code> sends an APNs push for any non-normal level (warning / critical), reading the device token from <code>kennel/fcm_token</code></span>
             </li>
           </ul>
         </article>
@@ -671,7 +679,7 @@
             <h3>Motion sensor detecting continuous activity</h3>
           </div>
           <ul class="trouble-list">
-            <li>Wait 30–60 seconds after starting the Pi — the AM312 PIR requires a brief warm-up period before readings stabilise</li>
+            <li>Wait 30–60 seconds after starting the Pi — the HC-SR501 PIR requires a brief warm-up period before readings stabilise</li>
             <li>Confirm wiring: VCC → 3.3V, GND → GND, OUT → GPIO 27 (active HIGH)</li>
             <li>Cover the lens fully — output should drop to 0 within ~3 seconds</li>
             <li>If continuously HIGH, check for IR sources (sun, heaters) and reposition the unit</li>
@@ -766,7 +774,7 @@
   <span class="c-key">"platform"</span>     <span class="c-colon">:</span>  <span class="c-string">"iOS 16+ (SwiftUI) + Raspberry Pi"</span><span class="c-colon">,</span>
   <span class="c-key">"stack"</span>        <span class="c-colon">:</span>  <span class="c-string">"SwiftUI · Firebase RTDB · FCM · Node.js · Python"</span><span class="c-colon">,</span>
   <span class="c-key">"sensors"</span>      <span class="c-colon">:</span>  <span class="c-string">"DHT22/AM2302 · KY-038 · HC-SR501 PIR (active HIGH) · LDR digital"</span><span class="c-colon">,</span>
-  <span class="c-key">"pi_script"</span>    <span class="c-colon">:</span>  <span class="c-string">"main_sensors.py — Puppy-Safe Edition v3"</span><span class="c-colon">,</span>
+  <span class="c-key">"pi_script"</span>    <span class="c-colon">:</span>  <span class="c-string">"main_sensors.py — Production Edition"</span><span class="c-colon">,</span>
   <span class="c-key">"category"</span>     <span class="c-colon">:</span>  <span class="c-string">"Smart Pet Care / IoT + Mobile"</span><span class="c-colon">,</span>
   <span class="c-key">"repository"</span>   <span class="c-colon">:</span>  <span class="c-link">"https://github.com/ShaharKoza/PuppyCare"</span><span class="c-colon">,</span>
   <span class="c-key">"license"</span>      <span class="c-colon">:</span>  <span class="c-string">"MIT"</span><span class="c-colon">,</span>
