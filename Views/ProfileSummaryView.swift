@@ -71,10 +71,6 @@ struct ProfileSummaryView: View {
                     // ── Manual override notice ────────────────────────────────
                     manualOverrideCard
 
-                    // ── Safety disclaimer ─────────────────────────────────────
-                    SafetyDisclaimerCard()
-                        .padding(.horizontal, AppTheme.horizontalPadding)
-
                     // ── Action buttons ────────────────────────────────────────
                     actionButtons
 

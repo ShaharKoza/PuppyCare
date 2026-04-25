@@ -392,9 +392,6 @@ struct DogProfileSetupView: View {
                     }
                 }
 
-                // ── Safety disclaimer ──────────────────────────────────────────
-                SafetyDisclaimerCard()
-
                 Spacer(minLength: 40)
             }
             .padding(.horizontal, AppTheme.horizontalPadding)
@@ -563,41 +560,3 @@ private struct MultiSelectRow: View {
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// MARK: - Safety Disclaimer Card
-// ─────────────────────────────────────────────────────────────────────────────
-
-struct SafetyDisclaimerCard: View {
-    var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            Image(systemName: "cross.circle.fill")
-                .font(.system(size: 18))
-                .foregroundColor(.red.opacity(0.75))
-                .padding(.top, 1)
-
-            VStack(alignment: .leading, spacing: 5) {
-                Text("Important Safety Note")
-                    .font(AppTheme.fieldLabelFont)
-                    .foregroundColor(.primary)
-
-                Text(
-                    "These are smart defaults based on your dog's profile — they do not replace veterinary care or judgment. " +
-                    "If you notice significant heat stress, breathing difficulty, unusual lethargy, or severe behavioral change, " +
-                    "contact a veterinarian immediately."
-                )
-                .font(.system(size: 13))
-                .foregroundColor(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-            }
-        }
-        .padding(AppTheme.cardPadding)
-        .background(
-            RoundedRectangle(cornerRadius: AppTheme.cardRadius, style: .continuous)
-                .fill(Color.red.opacity(0.06))
-                .overlay(
-                    RoundedRectangle(cornerRadius: AppTheme.cardRadius, style: .continuous)
-                        .stroke(Color.red.opacity(0.18), lineWidth: 1)
-                )
-        )
-    }
-}
