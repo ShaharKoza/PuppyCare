@@ -130,6 +130,25 @@ final class SensorHistoryStore: ObservableObject {
         guard let data = try? Data(contentsOf: saveURL) else { return }
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
-        readings = (try? decoder.decode([SensorReading].self, from: data)) ?? []
+
+        if let all = try? decoder.decode([SensorReading].self, from: data) {
+            readings = all
+            return
+        }
+
+        // Fallback: per-element decode so a single corrupt sample does not
+        // wipe the whole 48-hour history.
+        guard let raw = try? JSONSerialization.jsonObject(with: data) as? [Any] else {
+            readings = []
+            return
+        }
+        var recovered: [SensorReading] = []
+        for entry in raw {
+            guard let entryData = try? JSONSerialization.data(withJSONObject: entry) else { continue }
+            if let one = try? decoder.decode(SensorReading.self, from: entryData) {
+                recovered.append(one)
+            }
+        }
+        readings = recovered
     }
 }

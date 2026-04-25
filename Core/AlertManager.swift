@@ -885,7 +885,30 @@ final class AlertManager: ObservableObject {
         guard let data = try? Data(contentsOf: saveURL) else { return }
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
-        records = (try? decoder.decode([AlertRecord].self, from: data)) ?? []
+
+        // First try the fast path — the entire array decodes cleanly.
+        if let all = try? decoder.decode([AlertRecord].self, from: data) {
+            records = all
+            recalcUnread()
+            return
+        }
+
+        // Fallback: decode element-by-element so a single bad record (e.g. a
+        // legacy AlertType case from an older app version) does NOT wipe the
+        // whole history. We re-parse the JSON as [Any] and try each entry.
+        guard let raw = try? JSONSerialization.jsonObject(with: data) as? [Any] else {
+            records = []
+            return
+        }
+
+        var recovered: [AlertRecord] = []
+        for entry in raw {
+            guard let entryData = try? JSONSerialization.data(withJSONObject: entry) else { continue }
+            if let one = try? decoder.decode(AlertRecord.self, from: entryData) {
+                recovered.append(one)
+            }
+        }
+        records = recovered
         recalcUnread()
     }
 }
