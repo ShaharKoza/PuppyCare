@@ -38,19 +38,17 @@ struct DashboardView: View {
 
     private var statusTitle: String {
         switch normalizedLevel {
-        case "emergency": return "Immediate attention needed"
-        case "stress": return "Puppy may be uncomfortable"
-        case "warning": return "Environment needs attention"
-        default: return "Environment looks stable"
+        case "critical": return "Immediate attention needed"
+        case "warning":  return "Environment needs attention"
+        default:         return "Environment looks stable"
         }
     }
 
     private var levelPillText: String {
         switch normalizedLevel {
-        case "emergency": return "Emergency"
-        case "stress": return "Stress"
-        case "warning": return "Warning"
-        default: return "Normal"
+        case "critical": return "Critical"
+        case "warning":  return "Warning"
+        default:         return "Normal"
         }
     }
 
@@ -60,10 +58,9 @@ struct DashboardView: View {
 
     private var levelAccent: Color {
         switch normalizedLevel {
-        case "emergency": return AppTheme.alertEmergency
-        case "stress": return AppTheme.alertStress
-        case "warning": return AppTheme.alertWarning
-        default: return AppTheme.alertNormal
+        case "critical": return AppTheme.alertCritical
+        case "warning":  return AppTheme.alertWarning
+        default:         return AppTheme.alertNormal
         }
     }
 
@@ -71,10 +68,9 @@ struct DashboardView: View {
 
     private var levelIcon: String {
         switch normalizedLevel {
-        case "emergency": return "cross.case.fill"
-        case "stress": return "bolt.heart.fill"
-        case "warning": return "exclamationmark.circle.fill"
-        default: return "checkmark.circle.fill"
+        case "critical": return "cross.case.fill"
+        case "warning":  return "exclamationmark.circle.fill"
+        default:         return "checkmark.circle.fill"
         }
     }
 
@@ -114,18 +110,31 @@ struct DashboardView: View {
     }
 
     private var motionText: String { firebase.sensorData.motionDetected ? "Detected" : "Still" }
-    private var lightText: String { firebase.sensorData.lightDetected ? "Light" : "Dark" }
     private var soundText: String { firebase.sensorData.soundActive ? "Active" : "Quiet" }
     private var barkCountText: String { "\(firebase.sensorData.barkCount5s)" }
 
+    /// True iff the Pi's current alert level is "normal" (or absent).
+    /// Anything else means the Pi has flagged a live concern — only then do we
+    /// surface its `reasons` array. Without this gate, stale reasons left over
+    /// from a past warning continue to show up after the situation has cleared.
+    private var isAlertLevelNormal: Bool {
+        let level = firebase.sensorData.alertLevel
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+        return level.isEmpty || level == "normal"
+    }
+
+    /// Reasons to display in the headline. Empty array means "all quiet" —
+    /// the view renders a clear "no active alerts" state instead of repeating
+    /// "Everything looks good" as a fake alert row.
     private var cleanedAlertReasons: [String] {
+        guard !isAlertLevelNormal else { return [] }
+
         let raw = firebase.sensorData.alertReasons.filter {
             !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
             $0.lowercased() != "all clear"
         }
-
-        let mapped = raw.map(translatePiReason(_:)).filter { !$0.isEmpty }
-        return mapped.isEmpty ? ["Everything looks good right now"] : mapped
+        return raw.map(translatePiReason(_:)).filter { !$0.isEmpty }
     }
 
     private func translatePiReason(_ reason: String) -> String {
@@ -152,10 +161,25 @@ struct DashboardView: View {
         return cleanReason(reason)
     }
 
-    private var visibleVaccineReminders: [String] {
-        let dismissed = Set(profileStore.profile.dismissedVaccineReminders)
-        let visible = profileStore.profile.israelVaccineReminders.filter { !dismissed.contains($0) }
-        return visible.isEmpty ? ["All current reminders were marked as done."] : visible
+    private var dismissedVaccineSet: Set<String> {
+        Set(profileStore.profile.dismissedVaccineReminders)
+    }
+
+    /// Active (non-dismissed) structured health reminders derived from the profile.
+    /// Drives both the Dashboard card and the scheduled notifications in ReminderManager
+    /// — dismissing one here cancels the matching pending notification automatically.
+    private var activeHealthItems: [HealthReminderItem] {
+        profileStore.profile.derivedHealthReminders?.activeItems ?? []
+    }
+
+    /// Legacy string-based advisories — shown only when structured data is missing
+    /// (profiles created before the DogProfileEngine refactor).
+    private var legacyVaccineReminders: [String] {
+        profileStore.profile.israelVaccineReminders.filter { !dismissedVaccineSet.contains($0) }
+    }
+
+    private var hasStructuredReminders: Bool {
+        profileStore.profile.derivedHealthReminders != nil
     }
 
     /// True when there is at least one pending reminder the user hasn't dismissed,
@@ -163,8 +187,8 @@ struct DashboardView: View {
     /// False once every real reminder has been checked off — the whole card hides.
     private var shouldShowVaccineCard: Bool {
         guard profileStore.profile.ageMonthsValue != nil else { return true }
-        let dismissed = Set(profileStore.profile.dismissedVaccineReminders)
-        return profileStore.profile.israelVaccineReminders.contains { !dismissed.contains($0) }
+        if hasStructuredReminders { return !activeHealthItems.isEmpty }
+        return !legacyVaccineReminders.isEmpty
     }
 
     private var mealCount: Int { profileStore.profile.mealItems.count }
@@ -204,8 +228,8 @@ struct DashboardView: View {
 
                 statusHeroCard
                 cameraSection
-                sensorsSection
                 alertsCard
+                sensorsSection
                 presenceCard
                 feedingSummaryCard
                 if shouldShowVaccineCard {
@@ -374,13 +398,6 @@ struct DashboardView: View {
                 )
 
                 sensorTile(
-                    title: "Light",
-                    value: lightText,
-                    symbol: firebase.sensorData.lightDetected ? "sun.max.fill" : "moon.fill",
-                    tint: firebase.sensorData.lightDetected ? .yellow : .purple
-                )
-
-                sensorTile(
                     title: "Sound",
                     value: soundText,
                     symbol: firebase.sensorData.soundActive ? "speaker.wave.2.fill" : "speaker.slash.fill",
@@ -392,6 +409,13 @@ struct DashboardView: View {
                     value: barkCountText,
                     symbol: "waveform",
                     tint: .pink
+                )
+
+                sensorTile(
+                    title: "Light",
+                    value: firebase.sensorData.lightDetected ? "Light" : "Dark",
+                    symbol: firebase.sensorData.lightDetected ? "lightbulb.fill" : "moon.fill",
+                    tint: firebase.sensorData.lightDetected ? .yellow : .indigo
                 )
             }
         }
@@ -427,50 +451,75 @@ struct DashboardView: View {
             }
 
             VStack(alignment: .leading, spacing: 8) {
-                ForEach(cleanedAlertReasons.prefix(2), id: \.self) { reason in
-                    HStack(alignment: .top, spacing: 10) {
-                        Circle()
-                            .fill(levelAccent)
-                            .frame(width: 8, height: 8)
-                            .padding(.top, 5)
+                if !cleanedAlertReasons.isEmpty {
+                    // Live Pi-side reasons take precedence.
+                    ForEach(cleanedAlertReasons.prefix(2), id: \.self) { reason in
+                        HStack(alignment: .top, spacing: 10) {
+                            Circle()
+                                .fill(levelAccent)
+                                .frame(width: 8, height: 8)
+                                .padding(.top, 5)
 
-                        Text(reason)
-                            .font(.system(size: 15, weight: .medium))
-                            .fixedSize(horizontal: false, vertical: true)
+                            Text(reason)
+                                .font(.system(size: 15, weight: .medium))
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
                     }
-                }
-            }
+                } else if let recent = mostRecentActiveAlert() {
+                    // No live Pi reasons, but AlertManager fired something
+                    // recently (e.g. motion = Warning). Surface it here so the
+                    // dashboard matches History instead of saying "all quiet".
+                    Button {
+                        showAlertsHistory = true
+                    } label: {
+                        HStack(spacing: 10) {
+                            ZStack {
+                                Circle()
+                                    .fill(recent.severity.badgeColor.opacity(0.14))
+                                    .frame(width: 32, height: 32)
 
-            if let latest = alertManager.records.first {
-                Divider().overlay(AppTheme.softBorder)
+                                Image(systemName: recent.type.icon)
+                                    .font(.system(size: 14, weight: .semibold))
+                                    .foregroundStyle(recent.severity.badgeColor)
+                            }
 
-                HStack(spacing: 10) {
-                    ZStack {
-                        Circle()
-                            .fill(latest.type.tint.opacity(0.12))
-                            .frame(width: 28, height: 28)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(recent.title)
+                                    .font(.system(size: 15, weight: .semibold))
+                                    .foregroundStyle(.primary)
+                                    .lineLimit(1)
 
-                        Image(systemName: latest.type.icon)
-                            .font(.system(size: 12, weight: .semibold))
-                            .foregroundStyle(latest.type.tint)
+                                Text("\(recent.severity.label) · \(relativeTime(recent.timestamp))")
+                                    .font(.system(size: 12, weight: .medium))
+                                    .foregroundStyle(recent.severity.badgeColor)
+                            }
+
+                            Spacer(minLength: 0)
+
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 12, weight: .bold))
+                                .foregroundStyle(.tertiary)
+                        }
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                } else {
+                    // Truly all quiet — no Pi reasons, no recent records.
+                    HStack(spacing: 10) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundStyle(.green)
+
+                        Text("No active alerts")
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundStyle(.primary)
+
+                        Spacer(minLength: 0)
                     }
 
-                    Text(latest.title)
-                        .font(.system(size: 13, weight: .medium))
+                    Text("All sensors are within normal range.")
+                        .font(.system(size: 12))
                         .foregroundStyle(.secondary)
-                        .lineLimit(1)
-
-                    Spacer(minLength: 0)
-
-                    HStack(spacing: 4) {
-                        Circle()
-                            .fill(latest.severity.badgeColor)
-                            .frame(width: 5, height: 5)
-
-                        Text(relativeTime(latest.timestamp))
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundStyle(.tertiary)
-                    }
                 }
             }
         }
@@ -591,57 +640,17 @@ struct DashboardView: View {
 
                 Spacer()
 
-                if visibleVaccineReminders.first == "All current reminders were marked as done." {
-                    pill(
-                        text: "Done",
-                        textColor: AppTheme.accentBrown,
-                        fill: AppTheme.accentBrown.opacity(0.10)
-                    )
-                } else {
-                    pill(
-                        text: "Check due",
-                        textColor: AppTheme.accentBrown,
-                        fill: AppTheme.accentBrown.opacity(0.10)
-                    )
-                }
+                pill(
+                    text: vaccinePillText,
+                    textColor: AppTheme.accentBrown,
+                    fill: AppTheme.accentBrown.opacity(0.10)
+                )
             }
 
-            VStack(alignment: .leading, spacing: 10) {
-                ForEach(visibleVaccineReminders.prefix(1), id: \.self) { item in
-                    if item == "All current reminders were marked as done." {
-                        HStack(alignment: .top, spacing: 10) {
-                            Image(systemName: "checkmark.square.fill")
-                                .font(.system(size: 18, weight: .semibold))
-                                .foregroundStyle(AppTheme.accentBrown)
-                                .padding(.top, 2)
-
-                            Text(item)
-                                .font(.system(size: 15, weight: .medium))
-                                .fixedSize(horizontal: false, vertical: true)
-                        }
-                    } else {
-                        Button {
-                            markReminderDismissed(item)
-                        } label: {
-                            HStack(alignment: .top, spacing: 10) {
-                                Image(systemName: "square")
-                                    .font(.system(size: 18, weight: .semibold))
-                                    .foregroundStyle(AppTheme.accentBrown)
-                                    .padding(.top, 2)
-
-                                Text(item)
-                                    .font(.system(size: 15, weight: .medium))
-                                    .foregroundStyle(.primary)
-                                    .multilineTextAlignment(.leading)
-                                    .fixedSize(horizontal: false, vertical: true)
-
-                                Spacer(minLength: 0)
-                            }
-                            .contentShape(Rectangle())
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
+            if hasStructuredReminders {
+                structuredVaccineList
+            } else {
+                legacyVaccineList
             }
 
             Text("Reminder only — confirm the exact schedule with your veterinarian.")
@@ -651,6 +660,115 @@ struct DashboardView: View {
         .padding(14)
         .cardStyle()
     }
+
+    // ── Structured path (dog profile engine wired through ReminderManager) ────
+
+    @ViewBuilder
+    private var structuredVaccineList: some View {
+        if let item = activeHealthItems.first {
+            Button {
+                markHealthItemDismissed(key: item.key)
+            } label: {
+                HStack(alignment: .top, spacing: 10) {
+                    Image(systemName: "square")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(AppTheme.accentBrown)
+                        .padding(.top, 2)
+
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(item.title)
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundStyle(.primary)
+                        if let due = dueText(for: item) {
+                            Text(due)
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundStyle(dueColor(for: item))
+                        }
+                        Text(item.detail)
+                            .font(.system(size: 13))
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+
+                    Spacer(minLength: 0)
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    // ── Legacy path (older profiles without derived health reminders) ─────────
+
+    @ViewBuilder
+    private var legacyVaccineList: some View {
+        if let item = legacyVaccineReminders.first {
+            Button {
+                markReminderDismissed(item)
+            } label: {
+                HStack(alignment: .top, spacing: 10) {
+                    Image(systemName: "square")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(AppTheme.accentBrown)
+                        .padding(.top, 2)
+
+                    Text(item)
+                        .font(.system(size: 15, weight: .medium))
+                        .foregroundStyle(.primary)
+                        .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    Spacer(minLength: 0)
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+        } else {
+            HStack(alignment: .top, spacing: 10) {
+                Image(systemName: "checkmark.square.fill")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(AppTheme.accentBrown)
+                    .padding(.top, 2)
+                Text("All current reminders were marked as done.")
+                    .font(.system(size: 15, weight: .medium))
+            }
+        }
+    }
+
+    // ── Due-date presentation helpers ─────────────────────────────────────────
+
+    private var vaccinePillText: String {
+        if hasStructuredReminders {
+            return activeHealthItems.isEmpty ? "Done" : "Check due"
+        }
+        return legacyVaccineReminders.isEmpty ? "Done" : "Check due"
+    }
+
+    private func dueText(for item: HealthReminderItem) -> String? {
+        guard let due = item.dueDate else { return nil }
+        let days = Calendar.current.dateComponents([.day], from: Calendar.current.startOfDay(for: Date()),
+                                                   to: Calendar.current.startOfDay(for: due)).day ?? 0
+        if days < 0  { return "Overdue by \(-days) day\(days == -1 ? "" : "s")" }
+        if days == 0 { return "Due today" }
+        if days == 1 { return "Due tomorrow" }
+        if days < 30 { return "Due in \(days) days" }
+        return "Due " + Self.dueDateFormatter.string(from: due)
+    }
+
+    private func dueColor(for item: HealthReminderItem) -> Color {
+        guard let due = item.dueDate else { return .secondary }
+        let days = Calendar.current.dateComponents([.day], from: Date(), to: due).day ?? 0
+        if days < 0   { return .red }
+        if days <= 7  { return .orange }
+        return AppTheme.accentBrown
+    }
+
+    private static let dueDateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateStyle = .medium
+        f.timeStyle = .none
+        return f
+    }()
 
     private func sensorTile(
         title: String,
@@ -775,12 +893,22 @@ struct DashboardView: View {
         return "\(s / 86400)d ago"
     }
 
+    /// Most recent Warning- or Critical-level alert from the last hour, or nil.
+    /// Info-level events are excluded so the headline reflects something the user
+    /// actually needs to glance at. Records are stored newest-first, so
+    /// .first(where:) is O(k) — k is typically tiny.
+    private func mostRecentActiveAlert() -> AlertRecord? {
+        let cutoff = Date().addingTimeInterval(-3600)   // 1 hour
+        return alertManager.records.first {
+            $0.severity != .info && $0.timestamp >= cutoff
+        }
+    }
+
     private func cleanReason(_ reason: String) -> String {
         let text = reason
-            .replacingOccurrences(of: "[warning] ", with: "", options: .caseInsensitive)
-            .replacingOccurrences(of: "[stress] ", with: "", options: .caseInsensitive)
-            .replacingOccurrences(of: "[emergency] ", with: "", options: .caseInsensitive)
-            .replacingOccurrences(of: "[normal] ", with: "", options: .caseInsensitive)
+            .replacingOccurrences(of: "[warning] ",  with: "", options: .caseInsensitive)
+            .replacingOccurrences(of: "[critical] ", with: "", options: .caseInsensitive)
+            .replacingOccurrences(of: "[normal] ",   with: "", options: .caseInsensitive)
 
         guard let first = text.first else { return reason }
         return first.uppercased() + text.dropFirst()
@@ -790,6 +918,19 @@ struct DashboardView: View {
         var current = Set(profileStore.profile.dismissedVaccineReminders)
         current.insert(reminder)
         profileStore.profile.dismissedVaccineReminders = Array(current)
+    }
+
+    /// Marks a structured `HealthReminderItem` as dismissed by its stable key.
+    /// The ProfileStore auto-save pipeline picks up the mutation and calls
+    /// `ReminderManager.scheduleAllReminders(...)`, which cancels the matching
+    /// pending notification automatically (dismissed items are filtered out of
+    /// `activeItems` — the only list that gets scheduled).
+    private func markHealthItemDismissed(key: String) {
+        guard var reminders = profileStore.profile.derivedHealthReminders,
+              let idx = reminders.items.firstIndex(where: { $0.key == key })
+        else { return }
+        reminders.items[idx].dismissed = true
+        profileStore.profile.derivedHealthReminders = reminders
     }
 
     private func formatDuration(from start: Date, to now: Date) -> String {

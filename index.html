@@ -119,8 +119,8 @@
         <p>
           <strong>PuppyCare</strong> is a dedicated iPhone app for continuous, real-time monitoring
           of your dog's environment. A <strong>Raspberry Pi sensor unit</strong> installed near the
-          kennel collects data across <em>6 measurement types</em> — temperature, humidity, light,
-          motion, sound, and derived sleep state — and transmits it instantly to
+          kennel collects data across <em>6 measurement types</em> — temperature, humidity,
+          motion, sound, light, and derived sleep state — and transmits it instantly to
           <strong>Firebase Realtime Database</strong>, which propagates every update to the iOS app
           in under a second.
         </p>
@@ -165,39 +165,44 @@
         <p class="eyebrow">Features</p>
         <div class="divider-line" aria-hidden="true"></div>
         <h2 id="features-title">Everything your puppy needs.</h2>
-        <p class="section-sub">Six sensors, four alert levels, four app tabs — PuppyCare covers the full spectrum of modern kennel care.</p>
+        <p class="section-sub">Six measurements, three alert levels, four app tabs — PuppyCare covers the full spectrum of modern kennel care.</p>
       </div>
 
       <div class="grid-3">
         <article class="feat-card reveal reveal-d1">
           <div class="feat-icon" aria-hidden="true">🌡️</div>
           <h3>Temperature &amp; Humidity</h3>
-          <p><strong>DHT22/AM2302</strong> — black plastic housing with ventilation grid, 3-wire (VCC / DATA / GND), GPIO 22. Polled every 10 s with delta filtering. Age-adjusted thresholds: newborn 29–32°C → adult 20–29°C. Humidity: 55–65% for puppies, 30–70% for adults.</p>
+          <p><strong>DHT22/AM2302</strong> — 3-wire (VCC / DATA / GND), GPIO 22. Polled every 10 s with retries, range validation (-10…60 °C), and 60 s warm cache. Age-adjusted thresholds: newborn 29–32°C → adult 20–29°C. Humidity: 55–65% (puppies) / 30–70% (adults).</p>
         </article>
         <article class="feat-card reveal reveal-d2">
           <div class="feat-icon" aria-hidden="true">🏃</div>
           <h3>Motion &amp; Sleep Detection</h3>
-          <p><strong>HC-SR501 PIR</strong> — white Fresnel-lens dome on square PCB, 3-wire (VCC / OUT / GND), GPIO 27, active LOW. 5 s boot warmup, 10 s holdoff per trigger. Sleep = dark + quiet + still for 420 s continuous.</p>
+          <p><strong>HC-SR501 / AM312 PIR</strong> — Fresnel-lens dome, 3-wire (VCC / OUT / GND), GPIO 27, active HIGH. 5 s boot warm-up, 10 s holdoff per trigger. Sleep state derived on the Pi: dark + quiet + still for 420 s continuous.</p>
         </article>
         <article class="feat-card reveal reveal-d3">
           <div class="feat-icon" aria-hidden="true">🔊</div>
           <h3>Sound &amp; Bark Analysis</h3>
-          <p><strong>KY-038</strong> — red PCB with electret microphone + LM393 comparator, AO / G / + / DO pins, LED1 indicator, GPIO 17. 5 s sliding window, bark threshold = 3 events; sustained sound = 1.5 s continuous HIGH.</p>
+          <p><strong>KY-038</strong> — electret microphone + LM393 comparator, GPIO 17. 5 s sliding window classifies events: ≥3 barks = bark_detected, ≥1.5 s continuous HIGH = sustained_sound (warning escalation). Sensitivity trimmer adjusts threshold.</p>
         </article>
         <article class="feat-card reveal reveal-d1">
-          <div class="feat-icon" aria-hidden="true">🚨</div>
-          <h3>4-Level Alert System</h3>
-          <p>Normal → Warning → Stress → Emergency. Cloud Functions trigger FCM push notifications instantly. Thresholds are breed- and age-specific per USDA APHIS guidelines.</p>
+          <div class="feat-icon" aria-hidden="true">💡</div>
+          <h3>Ambient Light (LDR)</h3>
+          <p><strong>Photoresistor</strong> — 3-wire (VCC / OUT / GND), GPIO 4. Polled every 0.2 s with 3-sample debounce. HIGH = light, LOW = dark (polarity flag in code). Drives the dashboard Light tile and is logged as an informational event on each transition.</p>
         </article>
         <article class="feat-card reveal reveal-d2">
-          <div class="feat-icon" aria-hidden="true">📷</div>
-          <h3>On-Demand Camera</h3>
-          <p>Tap to request a live kennel snapshot. The Pi responds to a Firebase write, captures and uploads the image; the app displays it within seconds with a timestamp.</p>
+          <div class="feat-icon" aria-hidden="true">🚨</div>
+          <h3>3-Tier Alert System</h3>
+          <p>Bark → <strong>Critical</strong> immediately. Motion → Warning. Bark + Motion within 30 s → <strong>Critical</strong> (Activity + noise). Temperature out of range → Warning / Critical by severity. Cloud Function delivers FCM push the moment the level escalates.</p>
         </article>
         <article class="feat-card reveal reveal-d3">
+          <div class="feat-icon" aria-hidden="true">📷</div>
+          <h3>Live Camera Snapshots</h3>
+          <p>The Pi captures from a USB / CSI camera every 30 s + on every PIR / bark event, publishes a cache-busted URL to <code>kennel/camera</code>, and the iOS app's <code>AsyncImage</code> reloads automatically. ATS allows local-network HTTP for the Pi.</p>
+        </article>
+        <article class="feat-card reveal reveal-d1">
           <div class="feat-icon" aria-hidden="true">🍖</div>
           <h3>Care &amp; Routine Management</h3>
-          <p>Daily meal schedule with gram tracking and calorie totals. Walks and play sessions with countdowns. AI food-safety assistant + auto-generated vaccine reminders.</p>
+          <p>Daily meal schedule with gram tracking and calorie totals. Walks and play sessions with countdowns. AI food-safety assistant + auto-generated vaccine reminders by breed and age.</p>
         </article>
       </div>
 
@@ -214,42 +219,34 @@
       <div class="section-header reveal">
         <p class="eyebrow">Alert System</p>
         <div class="divider-line" aria-hidden="true"></div>
-        <h2 id="alerts-title">Four levels of protection.</h2>
-        <p class="section-sub">The system continuously evaluates all sensor data and assigns the kennel one of four severity states. Thresholds are age- and breed-adjusted — puppies receive stricter monitoring.</p>
+        <h2 id="alerts-title">Three tiers of protection.</h2>
+        <p class="section-sub">The system continuously evaluates all sensor data and assigns the kennel one of three severity states. Thresholds are age- and breed-adjusted — puppies receive stricter monitoring. Bark events trigger Critical immediately.</p>
       </div>
 
-      <div class="grid-4 reveal reveal-d1">
+      <div class="grid-3 reveal reveal-d1">
 
         <article class="alert-card alert-normal">
           <div class="alert-indicator" aria-hidden="true"></div>
           <div class="alert-level-label">Normal</div>
           <h3>All Clear</h3>
           <p>All parameters are within safe ranges. No action required. The kennel environment is comfortable and stable.</p>
-          <div class="alert-example">🟢 Temperature, humidity, motion, and sound all nominal.</div>
+          <div class="alert-example">🟢 Temperature, humidity, motion, sound, and light all nominal.</div>
         </article>
 
         <article class="alert-card alert-warning">
           <div class="alert-indicator" aria-hidden="true"></div>
           <div class="alert-level-label">Warning</div>
           <h3>Monitor Closely</h3>
-          <p>One parameter is approaching a threshold limit. Recommended to keep an eye on the situation — no immediate action needed yet.</p>
-          <div class="alert-example">🟡 Temperature reaching the upper comfort boundary.</div>
-        </article>
-
-        <article class="alert-card alert-stress">
-          <div class="alert-indicator" aria-hidden="true"></div>
-          <div class="alert-level-label">Stress</div>
-          <h3>Check Soon</h3>
-          <p>Multiple signs of discomfort detected, or a single parameter is outside the comfort range. Check on your dog soon.</p>
-          <div class="alert-example">🟠 Prolonged barking + elevated temperature simultaneously.</div>
+          <p>Motion-only activity in the kennel without any noise — the puppy is moving but not distressed. Keep an eye on the situation.</p>
+          <div class="alert-example">🟡 Movement detected, no barking. Temperature reaching the comfort boundary.</div>
         </article>
 
         <article class="alert-card alert-emergency">
           <div class="alert-indicator" aria-hidden="true"></div>
-          <div class="alert-level-label">Emergency</div>
+          <div class="alert-level-label">Critical</div>
           <h3>Immediate Action</h3>
-          <p>A critical threshold has been crossed. An FCM push notification is dispatched instantly. Immediate response is required.</p>
-          <div class="alert-example">🔴 Temperature above 35°C or below 7°C (adult dog).</div>
+          <p>Any bark detected, or barking + motion together within a 30-second window, or a critical environmental threshold crossed. An FCM push notification is dispatched instantly.</p>
+          <div class="alert-example">🔴 Barking in kennel · Activity + noise · Temperature &gt;35°C or &lt;7°C (adult).</div>
         </article>
 
       </div>
@@ -258,31 +255,46 @@
         <div class="threshold-row">
           <span class="threshold-label">Young Puppy (0–4 weeks)</span>
           <span class="threshold-range range-normal">24–30°C safe</span>
-          <span class="threshold-range range-emergency">Emergency: &lt;20°C / &gt;34°C</span>
+          <span class="threshold-range range-emergency">Critical: &lt;20°C / &gt;34°C</span>
         </div>
         <div class="threshold-row">
           <span class="threshold-label">Older Puppy (1–6 months)</span>
           <span class="threshold-range range-normal">22–28°C safe</span>
-          <span class="threshold-range range-emergency">Emergency: &lt;18°C / &gt;32°C</span>
+          <span class="threshold-range range-emergency">Critical: &lt;18°C / &gt;32°C</span>
         </div>
         <div class="threshold-row">
           <span class="threshold-label">Adult Dog</span>
           <span class="threshold-range range-normal">18–26°C safe</span>
-          <span class="threshold-range range-emergency">Emergency: Δ≥4°C from range</span>
+          <span class="threshold-range range-emergency">Critical: Δ≥4°C from range</span>
         </div>
         <div class="threshold-row">
           <span class="threshold-label">Humidity (all ages)</span>
           <span class="threshold-range range-normal">30–70% safe</span>
-          <span class="threshold-range range-emergency">Stress: Δ≥15% from range</span>
+          <span class="threshold-range range-emergency">Critical: Δ≥15% from range</span>
         </div>
         <div class="threshold-row">
-          <span class="threshold-label">Bark Count (5 s window)</span>
-          <span class="threshold-range range-normal">0–2 events = quiet</span>
-          <span class="threshold-range range-emergency">≥3 events = bark_detected alert</span>
+          <span class="threshold-label">Bark Detection</span>
+          <span class="threshold-range range-normal">Silent kennel</span>
+          <span class="threshold-range range-emergency">Any bark = Critical (immediate)</span>
+        </div>
+        <div class="threshold-row">
+          <span class="threshold-label">Bark + Motion (30 s window)</span>
+          <span class="threshold-range range-normal">Independent events OK</span>
+          <span class="threshold-range range-emergency">Co-occurrence = Critical (combined)</span>
+        </div>
+        <div class="threshold-row">
+          <span class="threshold-label">Motion Only</span>
+          <span class="threshold-range range-normal">Brief activity</span>
+          <span class="threshold-range range-emergency">Sustained activity = Warning</span>
+        </div>
+        <div class="threshold-row">
+          <span class="threshold-label">Ambient Light (LDR)</span>
+          <span class="threshold-range range-normal">Day / Night auto-detected</span>
+          <span class="threshold-range range-emergency">Sudden change = logged event</span>
         </div>
         <div class="threshold-row">
           <span class="threshold-label">Sleep Detection</span>
-          <span class="threshold-range range-normal">Dark + quiet + still</span>
+          <span class="threshold-range range-normal">Quiet + still</span>
           <span class="threshold-range range-emergency">Requires 420 s inactivity</span>
         </div>
         <p class="threshold-note">Thresholds from <code>main_sensors.py</code> v2 (Puppy-Safe Edition) · Sources: USDA APHIS · Purdue Canine Welfare · VCA Animal Hospitals · Royal Canin Academy · NIH/PMC</p>
@@ -337,7 +349,7 @@
           </div>
           <div class="screen-body">
             <h3>Live Dashboard</h3>
-            <p>Sensor tiles for temperature, humidity, motion, bark count, light, and kennel presence timer. Camera snapshot card at the top.</p>
+            <p>Sensor tiles for temperature, humidity, motion, bark count, and kennel presence timer. Camera snapshot card at the top.</p>
           </div>
         </article>
 
@@ -473,7 +485,7 @@
             </li>
             <li>
               <span class="tech-key">Data Flow</span>
-              <span class="tech-val">Pi → <code>kennel/sensors</code> (primary) + <code>kennel/alerts</code> (feed) → iOS listeners → UI re-render &lt;1 s end-to-end</span>
+              <span class="tech-val">Pi → <code>kennel/sensors</code> (primary) + <code>kennel/alert</code> (change-deduplicated) → iOS listeners → UI re-render &lt;1 s end-to-end</span>
             </li>
             <li>
               <span class="tech-key">Pi Script — v2</span>
@@ -490,19 +502,19 @@
           <ul class="tech-list">
             <li>
               <span class="tech-key">DHT22/AM2302 — GPIO 22</span>
-              <span class="tech-val">Black plastic housing with ventilation grid · 3-wire (VCC / DATA / GND) · polled every 10 s with range bounds + delta filtering · writes <code>kennel/dht</code> &amp; <code>kennel/sensors</code></span>
-            </li>
-            <li>
-              <span class="tech-key">LDR (photoresistor) — GPIO 4</span>
-              <span class="tech-val">Detects ambient light/dark, polled every 2 s. Output used together with PIR inactivity + KY-038 silence to derive the sleep state flag. Writes <code>kennel/light</code></span>
+              <span class="tech-val">Black plastic housing with ventilation grid · 3-wire (VCC / DATA / GND) · polled every 10 s with retries + 60 s warm cache + range validation (-10…60 °C) · writes <code>kennel/sensors</code></span>
             </li>
             <li>
               <span class="tech-key">KY-038 — GPIO 17</span>
               <span class="tech-val">Red PCB · electret microphone + LM393 comparator · AO / G / + / DO pins · sensitivity trimmer · LED1 indicator · 5 s window, bark ≥ 3 events, sustained ≥ 1.5 s HIGH · writes <code>kennel/sound</code></span>
             </li>
             <li>
-              <span class="tech-key">HC-SR501 PIR — GPIO 27 (active LOW)</span>
-              <span class="tech-val">White Fresnel-lens dome on square PCB · 3-wire (VCC / OUT / GND) · 5 s boot warmup · 10 s holdoff per trigger · sleep declared after 420 s combined inactivity · writes <code>kennel/pir</code></span>
+              <span class="tech-key">HC-SR501 PIR — GPIO 27 (active HIGH)</span>
+              <span class="tech-val">White Fresnel-lens dome on square PCB · 3-wire (VCC / OUT / GND) · 5 s boot warmup · 10 s holdoff per trigger · sleep declared after 420 s combined inactivity · writes <code>kennel/sensors</code></span>
+            </li>
+            <li>
+              <span class="tech-key">LDR Photoresistor — GPIO 4</span>
+              <span class="tech-val">Digital photoresistor module with onboard comparator · polled every 0.2 s · HIGH = light, LOW = dark · 3-sample debounce · writes <code>kennel/sensors.light</code></span>
             </li>
           </ul>
         </article>
@@ -515,15 +527,15 @@
           <ul class="tech-list">
             <li>
               <span class="tech-key">Primary path — <code>kennel/sensors</code></span>
-              <span class="tech-val">Flat combined snapshot written every alert cycle (~5 s) — iOS dashboard reads here: temperature, humidity, light, motion, sound, sleeping, streaks</span>
+              <span class="tech-val">Flat combined snapshot written every alert cycle (~5 s) — iOS dashboard reads here: temperature, humidity, motion, sound, sleeping, streaks</span>
             </li>
             <li>
-              <span class="tech-key">Alert feed — <code>kennel/alerts</code></span>
-              <span class="tech-val">Push-appended list — each non-normal event appended with message, priority, and timestamp. iOS alert tab reads here</span>
+              <span class="tech-key">Alert state — <code>kennel/alert</code></span>
+              <span class="tech-val">Single node overwritten only when level or reasons change (deduplicated writes) — iOS alert tab derives its history from this stream client-side</span>
             </li>
             <li>
               <span class="tech-key">Detail paths</span>
-              <span class="tech-val"><code>kennel/dht</code> · <code>kennel/light</code> · <code>kennel/sound</code> · <code>kennel/pir</code> · <code>kennel/alert</code> · <code>kennel/camera</code></span>
+              <span class="tech-val"><code>kennel/sensors</code> · <code>kennel/sound</code> · <code>kennel/alert</code> · <code>kennel/camera</code> · <code>kennel/diagnostics</code></span>
             </li>
             <li>
               <span class="tech-key">Camera</span>
@@ -569,21 +581,21 @@
           <div class="guide-num" aria-hidden="true">3</div>
           <div>
             <h3>Dashboard — Real-Time Monitoring</h3>
-            <p>Live tiles for temperature, humidity, light, motion, sound, sleep state, and alert level. Tap the camera card to request an on-demand kennel snapshot. Data refreshes continuously via Firebase listeners.</p>
+            <p>Live tiles for temperature, humidity, motion, sound &amp; bark count, ambient light (day/night), sleep state, and alert level. Tap the camera card to request an on-demand kennel snapshot. Data refreshes continuously via Firebase listeners.</p>
           </div>
         </div>
         <div class="guide-item reveal reveal-d1">
           <div class="guide-num" aria-hidden="true">4</div>
           <div>
             <h3>Sensor Details &amp; Data Displayed</h3>
-            <p>Six sensors: temperature (age-adjusted), humidity, light (used in sleep detection), PIR motion (requires a brief warm-up after boot), sound &amp; bark count (separate classification), and derived sleep state.</p>
+            <p>Six measurements: temperature (age-adjusted), humidity, PIR motion (HC-SR501, active HIGH — requires a brief warm-up after boot), sound &amp; bark count (separate classification), ambient light (LDR — day/night detection), and derived sleep state.</p>
           </div>
         </div>
         <div class="guide-item reveal reveal-d2">
           <div class="guide-num" aria-hidden="true">5</div>
           <div>
             <h3>Alert System &amp; Severity Levels</h3>
-            <p>Four levels: Normal → Warning → Stress → Emergency. Thresholds are adjusted to your dog's profile. Emergency events dispatch FCM push notifications instantly, even when the app is closed.</p>
+            <p>Three tiers: Normal → Warning (motion alone) → Critical (any bark, or bark + motion together within a 30-second window). Bark events fire Critical immediately. Thresholds adapt to your dog's profile. Critical events dispatch FCM push notifications instantly, even when the app is closed.</p>
           </div>
         </div>
         <div class="guide-item reveal reveal-d3">
@@ -597,7 +609,7 @@
           <div class="guide-num" aria-hidden="true">7</div>
           <div>
             <h3>Troubleshooting &amp; Common Issues</h3>
-            <p>No data? Check Pi power, Wi-Fi, and the sensor script. 0°C reading? Check wiring. Motion always active? PIR needs 1 min to stabilise. Alerts wrong? Re-enter date of birth and puppy status.</p>
+            <p>No data? Check Pi power, Wi-Fi, and the sensor script. 0°C reading? Check wiring. Motion stuck active? HC-SR501 PIR needs ~30s to stabilise. Light tile wrong? LDR digital module flips polarity — toggle <code>LDR_ACTIVE_HIGH</code>. Alerts wrong? Re-enter date of birth and puppy status.</p>
           </div>
         </div>
       </div>
@@ -659,9 +671,10 @@
             <h3>Motion sensor detecting continuous activity</h3>
           </div>
           <ul class="trouble-list">
-            <li>Wait 30–60 seconds after starting the Pi — the PIR sensor requires a brief warm-up period before readings stabilise</li>
-            <li>Check if detection stabilises after a short period</li>
-            <li>If it continues, adjust PIR sensitivity settings</li>
+            <li>Wait 30–60 seconds after starting the Pi — the AM312 PIR requires a brief warm-up period before readings stabilise</li>
+            <li>Confirm wiring: VCC → 3.3V, GND → GND, OUT → GPIO 27 (active HIGH)</li>
+            <li>Cover the lens fully — output should drop to 0 within ~3 seconds</li>
+            <li>If continuously HIGH, check for IR sources (sun, heaters) and reposition the unit</li>
           </ul>
         </div>
 
@@ -686,6 +699,19 @@
             <li>Check if the sound is general noise not classified as a bark</li>
             <li>Verify bark detection mechanism is active on the Pi</li>
             <li>Adjust sound sensor sensitivity as needed</li>
+          </ul>
+        </div>
+
+        <div class="trouble-item">
+          <div class="trouble-q">
+            <span class="trouble-icon" aria-hidden="true">💡</span>
+            <h3>Light tile shows wrong day/night state</h3>
+          </div>
+          <ul class="trouble-list">
+            <li>Confirm wiring: VCC → 3.3V, GND → GND, DO → GPIO 4</li>
+            <li>Adjust the trim-pot on the LDR module until the on-board LED toggles at the desired brightness</li>
+            <li>If day/night are inverted, flip <code>LDR_ACTIVE_HIGH</code> in <code>main_sensors.py</code></li>
+            <li>The reading is debounced over 3 samples — give it ~3 seconds to settle after a lighting change</li>
           </ul>
         </div>
 
@@ -739,8 +765,8 @@
   <span class="c-key">"year"</span>         <span class="c-colon">:</span>  <span class="c-number">2026</span><span class="c-colon">,</span>
   <span class="c-key">"platform"</span>     <span class="c-colon">:</span>  <span class="c-string">"iOS 16+ (SwiftUI) + Raspberry Pi"</span><span class="c-colon">,</span>
   <span class="c-key">"stack"</span>        <span class="c-colon">:</span>  <span class="c-string">"SwiftUI · Firebase RTDB · FCM · Node.js · Python"</span><span class="c-colon">,</span>
-  <span class="c-key">"sensors"</span>      <span class="c-colon">:</span>  <span class="c-string">"DHT22/AM2302 · LDR · KY-038 · PIR (active LOW)"</span><span class="c-colon">,</span>
-  <span class="c-key">"pi_script"</span>    <span class="c-colon">:</span>  <span class="c-string">"main_sensors.py — Puppy-Safe Edition v2"</span><span class="c-colon">,</span>
+  <span class="c-key">"sensors"</span>      <span class="c-colon">:</span>  <span class="c-string">"DHT22/AM2302 · KY-038 · HC-SR501 PIR (active HIGH) · LDR digital"</span><span class="c-colon">,</span>
+  <span class="c-key">"pi_script"</span>    <span class="c-colon">:</span>  <span class="c-string">"main_sensors.py — Puppy-Safe Edition v3"</span><span class="c-colon">,</span>
   <span class="c-key">"category"</span>     <span class="c-colon">:</span>  <span class="c-string">"Smart Pet Care / IoT + Mobile"</span><span class="c-colon">,</span>
   <span class="c-key">"repository"</span>   <span class="c-colon">:</span>  <span class="c-link">"https://github.com/ShaharKoza/PuppyCare"</span><span class="c-colon">,</span>
   <span class="c-key">"license"</span>      <span class="c-colon">:</span>  <span class="c-string">"MIT"</span><span class="c-colon">,</span>

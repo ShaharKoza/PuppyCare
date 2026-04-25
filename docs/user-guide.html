@@ -255,8 +255,8 @@ ul.ul li::marker{color:var(--acc)}
     <p class="bp">The Home tab Dashboard shows an up-to-date picture of the kennel environment. Data is refreshed continuously from Firebase, and alert checks run on every sensor update even when the app is in the background.</p>
     <div class="sub">Sensor Tiles Displayed</div>
     <div class="g2" style="margin-bottom:.9rem">
-      <ul class="ul"><li>Temperature (°C)</li><li>Humidity (%)</li><li>Light state (on / off)</li></ul>
-      <ul class="ul"><li>Motion detected (yes / no)</li><li>Bark detection &amp; count</li><li>Sleep state (derived by Pi)</li></ul>
+      <ul class="ul"><li>Temperature (°C)</li><li>Humidity (%)</li><li>Motion detected (yes / no)</li><li>Light state (light / dark)</li></ul>
+      <ul class="ul"><li>Bark detection &amp; count</li><li>Sleep state (derived by Pi)</li><li>Live camera snapshot</li></ul>
     </div>
     <div class="sub">App Tabs</div>
     <div class="tab4">
@@ -280,12 +280,12 @@ ul.ul li::marker{color:var(--acc)}
     <p class="bp">Relative humidity (%) displayed as an informational tile on the Dashboard. <strong>Humidity does not currently trigger alerts or push notifications</strong> — it is a display-only metric in this version.</p>
   </div>
   <div class="card">
-    <div class="sub">💡 Light — LDR Photoresistor (GPIO 4)</div>
-    <p class="bp">Detects light / dark in the kennel, polled every 2 s. One of three inputs used by the Pi to derive sleep state. The app also logs a local info alert whenever the light switches state, with a 5-minute cooldown.</p>
+    <div class="sub">🏃 Motion — HC-SR501 PIR (GPIO 27, active HIGH)</div>
+    <p class="bp">Detects movement. The sensor stabilises approximately 5 seconds after the Pi boots — readings before that may be unreliable. Each trigger is held for 10 s (holdoff). Motion alerts fire on the <em>transition</em> from no-motion → motion, with a 5-minute cooldown between notifications.</p>
   </div>
   <div class="card">
-    <div class="sub">🏃 Motion — HC-SR501 PIR (GPIO 27, active LOW)</div>
-    <p class="bp">Detects movement. The sensor stabilises approximately 5 seconds after the Pi boots — readings before that may be unreliable. Each trigger is held for 10 s (holdoff). Motion alerts fire on the <em>transition</em> from no-motion → motion, with a 5-minute cooldown between notifications.</p>
+    <div class="sub">💡 Light — LDR Photoresistor (GPIO 4, digital out)</div>
+    <p class="bp">A digital LDR module reports whether the kennel is currently lit or dark. Both transitions (light → dark, dark → light) are logged as informational events with a 5-minute cooldown.</p>
   </div>
   <div class="card">
     <div class="sub">🔊 Sound &amp; Barks — KY-038 (GPIO 17)</div>
@@ -320,16 +320,16 @@ ul.ul li::marker{color:var(--acc)}
     <p class="bp" style="margin-bottom:.9rem">The app evaluates every sensor update and raises an alert when a threshold is crossed. Alerts are stored locally (up to 500 records, 30-day retention) and can trigger FCM push notifications. All thresholds are calibrated from your dog profile — see Section 2.</p>
     <div class="alg">
       <div class="al ok">
-        <span class="abg"><span class="dot"></span>Info</span>
-        <div class="ald">Low-priority event: bark detected, motion appeared, or light switched state. Logged locally. No push notification.</div>
+        <span class="abg"><span class="dot"></span>Normal</span>
+        <div class="ald">All sensors within safe ranges. Kennel quiet, environment stable. No alert raised.</div>
       </div>
       <div class="al wa">
         <span class="abg"><span class="dot"></span>Warning</span>
-        <div class="ald">Temperature approaching a threshold limit, or sustained barking (≥ 1.5 s continuous). Logged + push notification sent.</div>
+        <div class="ald">Motion-only activity in the kennel without barking, or temperature/humidity approaching a threshold limit. Logged + push notification sent.</div>
       </div>
       <div class="al em">
         <span class="abg"><span class="dot"></span>Critical</span>
-        <div class="ald">Temperature has crossed a critical threshold (e.g. above criticalHigh or below criticalLow for the dog's profile). Immediate action required. Push notification sent.</div>
+        <div class="ald">Any bark detected (immediate), bark + motion co-occurrence within a 30-second window ("Activity + noise"), or a critical environmental threshold crossed. Immediate action required. Push notification sent instantly.</div>
       </div>
     </div>
   </div>
@@ -393,7 +393,7 @@ ul.ul li::marker{color:var(--acc)}
       <div class="ri"><strong>Temperature</strong><span>300 s (5 min) between alerts</span></div>
       <div class="ri"><strong>Sound / Barks</strong><span>60 s between alerts</span></div>
       <div class="ri"><strong>Motion</strong><span>300 s (5 min) between alerts</span></div>
-      <div class="ri"><strong>Light</strong><span>300 s (5 min) between alerts</span></div>
+      <div class="ri"><strong>Light change</strong><span>300 s (5 min) between alerts</span></div>
     </div>
   </div>
 </div>
@@ -482,7 +482,7 @@ ul.ul li::marker{color:var(--acc)}
         <div class="trq">Push notifications not arriving<span class="trc">▼</span></div>
         <div class="tra"><ul class="ul">
           <li>Grant notification permission in iOS Settings → PuppyCare → Notifications</li>
-          <li>Info-level events (motion, light, single barks) are <strong>not</strong> sent as push notifications — only Warning and Critical are</li>
+          <li>Any bark — even a single one — is treated as <strong>Critical</strong> and sent as a push notification. Motion alone fires a <strong>Warning</strong>. Bark + motion within 30 s combine into a single <strong>Critical</strong> "Activity + noise" alert</li>
           <li>Verify Firebase Cloud Functions are deployed: <code>firebase deploy --only functions</code></li>
           <li>Check that <code>kennel/fcm_token</code> is populated in your Firebase console</li>
         </ul></div>
@@ -682,7 +682,7 @@ ul.ul li::marker{color:var(--acc)}
           <td style="padding:.6rem .8rem;font-weight:600">Small / Large Dog</td>
           <td style="padding:.6rem .8rem"><span style="background:#E8F8E8;color:#1E7E34;font-size:11px;padding:2px 7px;border-radius:10px;font-weight:600">Yes</span></td>
           <td style="padding:.6rem .8rem">60 s</td>
-          <td style="padding:.6rem .8rem;font-size:11px;color:var(--t3)">Bark detected → Info; sustained → Warning</td>
+          <td style="padding:.6rem .8rem;font-size:11px;color:var(--t3)">Any bark → Critical (immediate); sustained → Critical (sustained)</td>
         </tr>
         <tr>
           <td style="padding:.6rem .8rem;font-weight:600">Senior / Sensitive</td>
@@ -724,14 +724,9 @@ ul.ul li::marker{color:var(--acc)}
         <div style="font-size:15px;font-weight:700;color:var(--acc)">30 min</div>
         <div style="font-size:11px;color:var(--t3)">to prevent sleep-period flooding</div>
       </div>
-      <div style="background:var(--bg);border-radius:10px;padding:.75rem 1rem">
-        <div style="font-size:11px;font-weight:700;color:var(--t3);margin-bottom:.25rem">Light change</div>
-        <div style="font-size:15px;font-weight:700;color:var(--acc)">5 min</div>
-        <div style="font-size:11px;color:var(--t3)">per state transition</div>
-      </div>
     </div>
     <div style="margin-top:1rem;padding:.75rem 1rem;background:var(--bg);border-radius:10px;font-size:12.5px;color:var(--t2);line-height:1.6">
-      <strong>Push notifications:</strong> Only <strong>Warning</strong> and <strong>Critical</strong> severity alerts trigger FCM push notifications. Info-level events are stored locally only.
+      <strong>Push notifications:</strong> Both <strong>Warning</strong> (motion-only activity) and <strong>Critical</strong> (any bark, bark + motion co-occurrence within 30 s, or critical environmental thresholds) trigger FCM push notifications instantly — even when the app is closed.
     </div>
   </div>
 </div>

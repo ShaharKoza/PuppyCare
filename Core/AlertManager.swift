@@ -12,7 +12,7 @@ enum AlertType: String, Codable, CaseIterable {
         case .temperature: return "thermometer.medium"
         case .sound:       return "waveform"
         case .motion:      return "figure.walk"
-        case .light:       return "sun.max"
+        case .light:       return "lightbulb.fill"
         }
     }
 
@@ -96,7 +96,6 @@ struct SensorSnapshot {
     var averageTemperature: Double?
     var totalBarks: Int
     var motionMinutes: Int
-    var lightLevel: Double?
 }
 
 enum DaySummaryStatus {
@@ -323,17 +322,28 @@ final class AlertManager: ObservableObject {
     // Per-type last-alert timestamps
     private var lastBarkAlertDate:       Date?
     private var lastMotionAlertDate:     Date?
-    private var lastLightAlertDate:      Date?
     private var lastTempAlertDate:       Date?
+    private var lastLightAlertDate:      Date?
+    private var lastCombinedAlertDate:   Date?
     private var lastInactivityAlertDate: Date?
     /// When the last motion-off transition was observed. Used to measure inactivity
     /// duration without requiring the Pi to write a secondsSinceMotion field.
     private var lastMotionStoppedDate:   Date?
 
+    // ── Co-occurrence tracking for the combined (motion+sound) critical alert ──
+    /// Last time we saw a bark event in any sensor update.
+    private var lastBarkObservedAt:   Date?
+    /// Last time we saw a motion-onset edge in any sensor update.
+    private var lastMotionObservedAt: Date?
+    /// Window for "both happened" — if a bark and a motion edge fall inside this
+    /// window, the situation is upgraded to a critical combined alert.
+    private let combinedWindow: TimeInterval = 30
+
     // Fixed cooldowns that don't depend on sensitivity
-    private let lightCooldown:      TimeInterval = 300
     private let tempCooldown:       TimeInterval = 300
     private let motionCooldown:     TimeInterval = 300   // baseline; overridden by sensitivity
+    private let lightCooldown:      TimeInterval = 300   // 5 min between light state-change alerts
+    private let combinedCooldown:   TimeInterval = 120   // 2 min between combined critical alerts
     /// Minimum re-alert gap for inactivity — prevent flooding while dog stays asleep.
     private let inactivityAlertCooldown: TimeInterval = 1800  // 30 min
 
@@ -348,6 +358,16 @@ final class AlertManager: ObservableObject {
 
     // MARK: - Public API
 
+    /// Pipeline:
+    ///   1. Temperature — independent of motion/sound, runs first.
+    ///   2. Stamp current bark / motion-edge observations into the rolling window.
+    ///   3. Combined alert — if bark + motion-edge fall inside the same window,
+    ///      emit ONE critical record and suppress the individual sound/motion
+    ///      alerts for this cycle (avoids three records from one event).
+    ///   4. Otherwise: standalone sound alert (any bark) and standalone motion
+    ///      alert (motion onset). Both are Warning level — the user wanted
+    ///      immediate, visible alerts on either signal.
+    ///   5. Light + inactivity housekeeping.
     func processSensorUpdate(_ sensor: SensorData) {
         defer { isFirstUpdate = false }
 
@@ -357,9 +377,24 @@ final class AlertManager: ObservableObject {
             return
         }
 
+        let now         = Date()
+        let motionEdge  = (prevMotionDetected == false) && (sensor.motionDetected == true)
+        let barkEvent   = sensor.barkDetected
+        if barkEvent  { lastBarkObservedAt   = now }
+        if motionEdge { lastMotionObservedAt = now }
+
         checkTemperature(sensor)
-        checkSound(sensor)
-        checkMotion(sensor)
+
+        let combinedFired = checkCombinedAlert(sensor: sensor, now: now)
+
+        if !combinedFired {
+            if barkEvent  { checkSound(sensor) }
+            if motionEdge { fireMotionAlert(sensor: sensor, now: now) }
+        }
+
+        // Update edge state and run motion-stopped tracking + inactivity check.
+        updateMotionStateAndInactivity(sensor)
+
         checkLight(sensor)
     }
 
@@ -397,14 +432,6 @@ final class AlertManager: ObservableObject {
 
         config.operationalProfile = operationalProfile
         config.puppyAgeMonths     = puppyAgeMonths
-    }
-
-    /// Backward-compatible shim — keeps old call sites working if not yet updated.
-    func updateThresholds(warnHigh: Double, criticalHigh: Double, warnLow: Double, criticalLow: Double) {
-        config.tempWarnHigh     = warnHigh
-        config.tempCriticalHigh = criticalHigh
-        config.tempWarnLow      = warnLow
-        config.tempCriticalLow  = criticalLow
     }
 
     func markAllRead() {
@@ -566,110 +593,185 @@ final class AlertManager: ObservableObject {
     //   soundAsStandaloneTrigger = false → sustainedSound OR barkDetected triggers the
     //     check; only sustained events produce an alert. This ensures that neonatal cries
     //     and brachycephalic respiratory sounds can alert even when bark_count_5s is low.
+    /// Standalone sound alert.
+    /// User intent: any bark in the kennel is a CRITICAL alert immediately —
+    /// barking is never a low-priority event. Sustained barking gets stronger
+    /// wording but the same severity. The combined (motion + bark) path is
+    /// handled upstream; if it fired, this method is skipped for the cycle.
     private func checkSound(_ sensor: SensorData) {
         let hasBark      = sensor.barkDetected
         let hasSustained = sensor.sustainedSound
-
-        // Entry gate: decide which events are relevant for this profile.
-        if config.soundAsStandaloneTrigger {
-            // Standard adult mode — only respond to confirmed bark events.
-            guard hasBark else { return }
-        } else {
-            // Neonatal / brachycephalic / young puppy — sustained sound is
-            // the meaningful signal; bark events alone are not sufficient.
-            guard hasBark || hasSustained else { return }
-        }
+        guard hasBark || hasSustained else { return }
 
         let now = Date()
         if let last = lastBarkAlertDate, now.timeIntervalSince(last) < effectiveBarkCooldown { return }
 
-        // ── Neonatal puppy (0–4 weeks): cry/whimper logic ────────────────────
+        // ── Neonatal puppy (0–4 weeks): only sustained cries — brief whimpers normal ──
         if config.operationalProfile == .youngPuppy,
            let age = config.puppyAgeMonths, age < 1 {
-            // Only alert on sustained vocalization — brief sounds are normal.
-            // Sustained cry in a neonate = potential cold/hunger/pain distress.
             guard hasSustained else { return }
             append(AlertRecord(
                 type: .sound, severity: .critical,
                 title: "Puppy distress cry detected",
-                detail: "Sustained crying in a neonatal puppy may indicate: insufficient warmth (check temp 29–32°C), hunger, pain, or separation. Check immediately."
+                detail: "Sustained crying in a neonatal puppy may indicate insufficient warmth (target 29–32°C), hunger, pain, or separation. Check immediately."
             ))
             lastBarkAlertDate = now
             return
         }
 
-        // ── soundAsStandaloneTrigger = false: only alert on sustained sound ──
-        // Applied to: transitional/juvenile puppies, brachycephalic dogs.
-        // Reason: puppy whimpers and brachycephalic breathing sounds generate
-        // frequent sensor events that are not true distress signals.
-        if !config.soundAsStandaloneTrigger {
-            guard hasSustained else { return }
-
-            let detail: String
-            if config.operationalProfile == .brachycephalic {
-                detail = "Sustained sound detected. Flat-faced dogs may produce respiratory sounds (snoring/stertor) — verify breathing quality and check for overheating."
-            } else {
-                // Puppy 1–4 months
-                detail = "Sustained vocalization detected. Puppy may need attention — check warmth, feeding schedule, or social needs."
-            }
-            append(AlertRecord(type: .sound, severity: .warning, title: "Sustained vocalization", detail: detail))
-            lastBarkAlertDate = now
-            return
-        }
-
-        // ── Standard adult alert logic ────────────────────────────────────────
-        let severity: AlertSeverity = hasSustained ? .warning : .info
+        // ── All other cases: bark or sustained sound → Critical ─────────────
+        let title: String
         let detail: String
 
         if hasSustained {
+            title = "Sustained barking in kennel"
             switch config.operationalProfile {
+            case .brachycephalic:
+                detail = "Sustained sound — flat-faced dogs may produce respiratory sounds (snoring/stertor). Verify breathing and check for overheating."
             case .seniorSensitive:
-                detail = "Sustained barking detected. Senior dogs may bark due to disorientation, pain, or anxiety — check on your dog."
+                detail = "Sustained barking — senior dogs may bark due to disorientation, pain, or anxiety. Check on your dog."
             default:
-                detail = "Sustained barking detected — your dog may need attention."
+                detail = "Sustained barking detected — your dog needs attention."
             }
-        } else if sensor.barkCount5s >= 3 {
-            detail = "Repeated barking detected (\(sensor.barkCount5s) barks in 5 s)."
         } else {
-            detail = "Bark event detected."
+            title  = "Barking in kennel"
+            detail = sensor.barkCount5s >= 3
+                ? "Repeated barking detected (\(sensor.barkCount5s) barks in 5 s) — check on your dog."
+                : "Barking detected in the kennel — check on your dog."
         }
 
-        append(AlertRecord(type: .sound, severity: severity, title: "Barking detected", detail: detail))
+        append(AlertRecord(
+            type: .sound, severity: .critical,
+            title: title,
+            detail: detail
+        ))
         lastBarkAlertDate = now
     }
 
-    // ── Motion (edge-triggered) ────────────────────────────────────────────────
-    private func checkMotion(_ sensor: SensorData) {
-        let current = sensor.motionDetected
-        defer { prevMotionDetected = current }
+    // ── Combined: motion + bark within the same window → critical ───────────
+    // Returns true if a combined record was emitted. The caller uses this to
+    // suppress the individual sound/motion alerts for the current cycle so the
+    // user sees ONE clear critical record instead of three competing ones.
+    //
+    // We also still respect the Pi's sustained streaks: if both streaks cross
+    // their thresholds (≥ ~15 s of co-activity), that's an even stronger signal
+    // and forces a combined alert even if neither edge fired this exact cycle.
+    private let combinedMotionStreakThreshold = 3
+    private let combinedSoundStreakThreshold  = 3
 
-        // Track motion stop/start transitions to drive the inactivity clock.
-        // prevMotionDetected still holds the OLD value here (defer fires at end of scope).
-        if let prev = prevMotionDetected, prev != current {
-            if current {
-                // Motion started → reset inactivity clock
-                lastMotionStoppedDate = nil
-            } else {
-                // Motion stopped → begin counting
-                lastMotionStoppedDate = Date()
-            }
+    @discardableResult
+    private func checkCombinedAlert(sensor: SensorData, now: Date) -> Bool {
+        // Path A: bark + motion-edge observed within combinedWindow.
+        let barkRecent =
+            lastBarkObservedAt.map   { now.timeIntervalSince($0) <= combinedWindow } ?? false
+        let motionRecent =
+            lastMotionObservedAt.map { now.timeIntervalSince($0) <= combinedWindow } ?? false
+        let coOccurrence = barkRecent && motionRecent
+
+        // Path B: Pi-side sustained streaks both above threshold (long co-activity).
+        let sustainedCoActivity =
+            sensor.motionStreak >= combinedMotionStreakThreshold &&
+            sensor.soundStreak  >= combinedSoundStreakThreshold
+
+        guard coOccurrence || sustainedCoActivity else { return false }
+
+        if let last = lastCombinedAlertDate,
+           now.timeIntervalSince(last) < combinedCooldown { return false }
+
+        let detail: String
+        switch config.operationalProfile {
+        case .youngPuppy:
+            let ageMonths = config.puppyAgeMonths ?? 2.0
+            detail = ageMonths < 1
+                ? "Neonatal puppy is moving and vocalising at the same time — possible distress (cold, hunger, pain). Check immediately."
+                : "Puppy is moving and barking at the same time — may need attention. Check immediately."
+        case .brachycephalic:
+            detail = "Movement and barking at the same time — flat-faced breeds can become distressed quickly. Verify breathing and kennel temperature."
+        case .seniorSensitive:
+            detail = "Movement and barking together in a senior dog — may indicate disorientation, pain, or distress."
+        default:
+            detail = sustainedCoActivity
+                ? "Sustained activity and barking detected — your dog may need urgent attention."
+                : "Movement and barking detected together — your dog may need urgent attention."
         }
 
-        // Inactivity check runs on every update regardless of edge transition.
-        checkInactivity(sensor)
+        append(AlertRecord(
+            type: .sound, severity: .critical,
+            title: "Activity + noise in kennel",
+            detail: detail
+        ))
+        lastCombinedAlertDate = now
+        // Note: we deliberately do NOT stamp lastBarkAlertDate here. The combined
+        // event is logged as a sound record above, and the per-cycle suppression
+        // (skipping checkSound / fireMotionAlert in processSensorUpdate) is enough
+        // to avoid duplicate records for THIS update. Stamping the bark cooldown
+        // here would silence real solo barks that arrive during the next 1-2 min,
+        // which contradicts the "any bark = Critical" promise.
+        lastMotionAlertDate = now
+        return true
+    }
 
-        // Edge alert: fire only on false → true transition (motion started).
-        guard current != prevMotionDetected, current else { return }
+    // ── Motion (edge-triggered, Warning level) ─────────────────────────────
+    /// Fires the standalone "Motion in kennel" warning. Caller has already
+    /// verified that this is a false→true edge AND that no combined alert
+    /// fired this cycle.
+    private func fireMotionAlert(sensor: SensorData, now: Date) {
+        if let last = lastMotionAlertDate,
+           now.timeIntervalSince(last) < effectiveMotionCooldown { return }
 
-        let now = Date()
-        if let last = lastMotionAlertDate, now.timeIntervalSince(last) < effectiveMotionCooldown { return }
+        let detail: String
+        switch config.operationalProfile {
+        case .seniorSensitive:
+            detail = "Movement detected — senior dogs sometimes pace when uncomfortable. Check on your dog if this is unusual."
+        case .brachycephalic:
+            detail = "Movement detected — verify breathing quality and that the kennel is cool."
+        default:
+            detail = "Activity detected in the kennel."
+        }
 
         append(AlertRecord(
-            type: .motion, severity: .info,
-            title: "Movement detected",
-            detail: "Activity detected in the kennel."
+            type: .motion, severity: .warning,
+            title: "Motion in kennel",
+            detail: detail
         ))
         lastMotionAlertDate = now
+    }
+
+    /// Tracks motion stop/start transitions for the inactivity clock and runs
+    /// the inactivity threshold check. Always called once per update.
+    private func updateMotionStateAndInactivity(_ sensor: SensorData) {
+        let current = sensor.motionDetected
+        if let prev = prevMotionDetected, prev != current {
+            if current {
+                lastMotionStoppedDate = nil           // moving again → reset clock
+            } else {
+                lastMotionStoppedDate = Date()        // stopped → begin counting
+            }
+        }
+        checkInactivity(sensor)
+        prevMotionDetected = current
+    }
+
+    // ── Light (edge-triggered) ─────────────────────────────────────────────────
+    // Logs an info-level record on every light↔dark transition, with a 5-minute
+    // cooldown between alerts to prevent flooding from a flickering bulb or
+    // intermittent sunlight. Light changes are context, not safety — never push.
+    private func checkLight(_ sensor: SensorData) {
+        let current = sensor.lightDetected
+        defer { prevLightDetected = current }
+
+        guard current != prevLightDetected else { return }
+
+        let now = Date()
+        if let last = lastLightAlertDate, now.timeIntervalSince(last) < lightCooldown { return }
+
+        let title  = current ? "Lights turned on"  : "Lights turned off"
+        let detail = current
+            ? "The kennel is now lit."
+            : "The kennel is now dark — your dog may be settling in for sleep."
+
+        append(AlertRecord(type: .light, severity: .info, title: title, detail: detail))
+        lastLightAlertDate = now
     }
 
     // ── Inactivity ─────────────────────────────────────────────────────────────
@@ -743,23 +845,6 @@ final class AlertManager: ObservableObject {
 
         append(AlertRecord(type: .motion, severity: severity, title: title, detail: detail))
         lastInactivityAlertDate = now
-    }
-
-    // ── Light ──────────────────────────────────────────────────────────────────
-    private func checkLight(_ sensor: SensorData) {
-        let current = sensor.lightDetected
-        defer { prevLightDetected = current }
-
-        guard current != prevLightDetected else { return }
-
-        let now = Date()
-        if let last = lastLightAlertDate, now.timeIntervalSince(last) < lightCooldown { return }
-
-        let title  = current ? "Light turned on"         : "Light turned off"
-        let detail = current ? "Light is now on in the kennel." : "Light is now off in the kennel."
-
-        append(AlertRecord(type: .light, severity: .info, title: title, detail: detail))
-        lastLightAlertDate = now
     }
 
     // MARK: - Record Management

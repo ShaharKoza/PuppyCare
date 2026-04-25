@@ -62,9 +62,8 @@ exports.sendAlertNotification = onValueWritten(
     }
 
     const emoji = {
-      warning:   "⚠️",
-      stress:    "🔶",
-      emergency: "🚨",
+      warning:  "⚠️",
+      critical: "🚨",
     }[after.level] ?? "🐶";
 
     // Build a human-readable body from the reasons array.

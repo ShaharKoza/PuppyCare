@@ -8,10 +8,9 @@ enum AppTheme {
     static let pageBackground = Color(.systemGroupedBackground)
     static let inputBackground = Color(.secondarySystemBackground)
 
-    static let alertWarning = Color(red: 224/255, green: 175/255, blue: 0)
-    static let alertStress = Color.orange
-    static let alertEmergency = Color.red
-    static let alertNormal = Color.green
+    static let alertWarning  = Color(red: 224/255, green: 175/255, blue: 0)
+    static let alertCritical = Color.red
+    static let alertNormal   = Color.green
 
     static let softBorder = Color.primary.opacity(0.08)
     static let softShadow = Color.black.opacity(0.045)

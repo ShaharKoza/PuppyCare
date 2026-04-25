@@ -317,7 +317,7 @@ struct DogProfileSetupView: View {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // MARK: - Step 3: Coat & Special Conditions
+    // MARK: - Step 3: Coat type
     // ─────────────────────────────────────────────────────────────────────────
 
     private var step3CoatCondition: some View {
@@ -326,8 +326,8 @@ struct DogProfileSetupView: View {
 
                 stepHeader(
                     icon: "thermometer.medium",
-                    title: "Coat & Health",
-                    subtitle: "Coat type affects temperature sensitivity. Any health condition shifts alert thresholds to a safer range."
+                    title: "Coat",
+                    subtitle: "Coat type affects temperature sensitivity. Alert thresholds are calibrated automatically."
                 )
 
                 VStack(alignment: .leading, spacing: 12) {
@@ -342,21 +342,6 @@ struct DogProfileSetupView: View {
                                 subtitle: ct.subtitle,
                                 isSelected: coatType == ct
                             ) { coatType = ct }
-                        }
-                    }
-                }
-
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("Special condition")
-                        .font(AppTheme.fieldLabelFont)
-                        .foregroundColor(.secondary)
-
-                    VStack(spacing: 8) {
-                        ForEach(SpecialCondition.allCases) { sc in
-                            SelectionRow(
-                                title: sc.displayName,
-                                isSelected: specialCondition == sc
-                            ) { specialCondition = sc }
                         }
                     }
                 }
@@ -378,8 +363,8 @@ struct DogProfileSetupView: View {
 
                 stepHeader(
                     icon: "map.fill",
-                    title: "Lifestyle & Region",
-                    subtitle: "This activates the right health reminders — kennel cough, leptospirosis, and park worm prevention are only shown when relevant."
+                    title: "Lifestyle",
+                    subtitle: "This activates the right health reminders — kennel cough and park worm prevention are only shown when relevant."
                 )
 
                 // ── Lifestyle (multi-select) ───────────────────────────────────
@@ -403,22 +388,6 @@ struct DogProfileSetupView: View {
                                     }
                                 }
                             }
-                        }
-                    }
-                }
-
-                // ── Region risk ────────────────────────────────────────────────
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("Region (for leptospirosis reminders)")
-                        .font(AppTheme.fieldLabelFont)
-                        .foregroundColor(.secondary)
-
-                    VStack(spacing: 8) {
-                        ForEach(RegionRisk.allCases) { rr in
-                            SelectionRow(
-                                title: rr.displayName,
-                                isSelected: regionRisk == rr
-                            ) { regionRisk = rr }
                         }
                     }
                 }

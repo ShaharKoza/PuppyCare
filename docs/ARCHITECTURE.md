@@ -97,7 +97,7 @@ temp < warnLow      → AlertSeverity.warning,  title: "Kennel getting cold"
 
 Thresholds are live-updated by `ProfileStore.syncThresholds()` whenever the user changes them in the Profile screen.
 
-**Edge-triggered motion and light:** The first sensor update is used to establish baseline values. Subsequent motion/light alerts only fire on *changes* (false → true for motion, any transition for light).
+**Edge-triggered motion and light:** The first sensor update is used to establish baseline values. Subsequent motion and light alerts only fire on *changes* (false → true for motion; either edge for light, since both transitions are informative).
 
 **Persistence:** Records are saved to `Documents/alert_history.json` using a debounced `PassthroughSubject` that coalesces rapid successive writes into a single disk write 500 ms later.
 
@@ -180,15 +180,15 @@ A simple struct (not `Codable`) that aggregates the latest reading from all Fire
 ```
 kennel/
   sensors/       ← PRIMARY: written by Pi every ~5 s; iOS app reads here for all live tiles
-                    temperature, humidity, light (String), motion (Bool), sound (Bool),
-                    sleeping (Bool), motion_streak, sound_streak, timestamp (HH:MM:SS)
+                    temperature, humidity, motion (Bool), sleeping (Bool),
+                    light ("light"|"dark"), motion_streak, sound_streak,
+                    timestamp (ISO 8601 UTC)
+  heartbeat/     ← Written every cycle by Pi: timestamp, epoch_ms — iOS surfaces "offline" if stale > 60 s
   sound/         ← Written by Pi bark-detection loop: sound_active, bark_detected,
                     bark_count_5s, sustained_sound
-  alert/         ← Written by Pi: level, sleeping, puppy_mode, puppy_age, reasons, timestamp
-  alerts/        ← Written by Pi: push-appended list of non-normal alert events (feed)
-  dht/           ← Written by Pi: temperature, humidity, timestamp (detail path)
-  light/         ← Written by Pi: light_detected, timestamp (detail path)
-  pir/           ← Written by Pi: motion_detected, last_motion, seconds_since_motion
+  alert/         ← Written by Pi (deduplicated — only on level/reasons change):
+                    level, sleeping, puppy_mode, puppy_age, reasons, timestamp
+  diagnostics/   ← Written by Pi: uptime, last_loop, sensor health
   camera/
     capture_request  ← Written by iOS app (ServerValue.timestamp())
     image_url        ← Written by Pi after capture

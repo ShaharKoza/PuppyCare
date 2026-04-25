@@ -12,6 +12,14 @@ final class FirebaseService: ObservableObject {
     @Published var cameraImageUpdatedAt: Date?
 
     @Published var lastValidTempDate: Date?
+    @Published var lastHeartbeatDate: Date?
+
+    /// True when the Pi unit hasn't written a heartbeat in > 60 s — UI surfaces
+    /// an "offline" banner so the user knows the values may be stale.
+    var isPiOffline: Bool {
+        guard let date = lastHeartbeatDate else { return false }
+        return Date().timeIntervalSince(date) > 60
+    }
 
     var isTempStale: Bool {
         guard let date = lastValidTempDate else { return sensorData.temperature == nil }
@@ -25,11 +33,12 @@ final class FirebaseService: ObservableObject {
 
     private let rootRef = Database.database().reference()
 
-    private var connectionHandle: DatabaseHandle?
-    private var sensorsHandle: DatabaseHandle?
-    private var soundHandle: DatabaseHandle?
-    private var alertHandle: DatabaseHandle?
-    private var cameraHandle: DatabaseHandle?
+    private var connectionHandle:  DatabaseHandle?
+    private var sensorsHandle:     DatabaseHandle?
+    private var soundHandle:       DatabaseHandle?
+    private var alertHandle:       DatabaseHandle?
+    private var cameraHandle:      DatabaseHandle?
+    private var heartbeatHandle:   DatabaseHandle?
 
     private init() {}
 
@@ -40,6 +49,7 @@ final class FirebaseService: ObservableObject {
         listenToSound()
         listenToAlert()
         listenToCamera()
+        listenToHeartbeat()
     }
 
     func stopListening() {
@@ -67,6 +77,10 @@ final class FirebaseService: ObservableObject {
         if let h = cameraHandle {
             rootRef.child("kennel/camera").removeObserver(withHandle: h)
             cameraHandle = nil
+        }
+        if let h = heartbeatHandle {
+            rootRef.child("kennel/heartbeat").removeObserver(withHandle: h)
+            heartbeatHandle = nil
         }
     }
 
@@ -97,13 +111,14 @@ final class FirebaseService: ObservableObject {
                 guard snapshot.exists() else { return }
                 guard let dict = snapshot.value as? [String: Any] else { return }
 
-                let temperature = FirebaseService.toDouble(dict["temperature"])
-                let humidity = FirebaseService.toDouble(dict["humidity"])
-                let motion = FirebaseService.toBool(dict["motion"])
-                let sound = FirebaseService.toBool(dict["sound"])
-                let sleeping = FirebaseService.toBool(dict["sleeping"])
+                let temperature   = FirebaseService.toDouble(dict["temperature"])
+                let humidity      = FirebaseService.toDouble(dict["humidity"])
+                let motion        = FirebaseService.toBool(dict["motion"])
+                let sleeping      = FirebaseService.toBool(dict["sleeping"])
                 let lightDetected = FirebaseService.lightStringToBool(dict["light"])
-                let timestamp = dict["timestamp"] as? String
+                let motionStreak  = FirebaseService.toInt(dict["motion_streak"])
+                let soundStreak   = FirebaseService.toInt(dict["sound_streak"])
+                let timestamp     = dict["timestamp"] as? String
 
                 Task { @MainActor [weak self] in
                     guard let self else { return }
@@ -112,12 +127,13 @@ final class FirebaseService: ObservableObject {
                         self.sensorData.temperature = temperature
                         self.lastValidTempDate = Date()
                     }
-                    if let humidity { self.sensorData.humidity = humidity }
-                    if let motion { self.sensorData.motionDetected = motion }
-                    if let sound { self.sensorData.soundActive = sound }
-                    if let sleeping { self.sensorData.sleeping = sleeping }
-                    if let lightDetected { self.sensorData.lightDetected = lightDetected }
-                    if let timestamp { self.sensorData.timestamp = timestamp }
+                    if let humidity      { self.sensorData.humidity       = humidity      }
+                    if let motion        { self.sensorData.motionDetected  = motion        }
+                    if let sleeping      { self.sensorData.sleeping        = sleeping      }
+                    if let lightDetected { self.sensorData.lightDetected   = lightDetected }
+                    if let motionStreak  { self.sensorData.motionStreak    = motionStreak  }
+                    if let soundStreak   { self.sensorData.soundStreak     = soundStreak   }
+                    if let timestamp     { self.sensorData.timestamp       = timestamp     }
 
                     // Record into history from the sticky sensorData cache —
                     // NOT from the per-tick local parsed values. This way a
@@ -237,6 +253,34 @@ final class FirebaseService: ObservableObject {
         )
     }
 
+    private func listenToHeartbeat() {
+        heartbeatHandle = rootRef.child("kennel/heartbeat").observe(
+            .value,
+            with: { [weak self] snapshot in
+                guard self != nil else { return }
+                guard snapshot.exists() else { return }
+
+                // Accept either a dict { timestamp, epoch_ms } or a raw ISO string.
+                var resolved: Date?
+                if let dict = snapshot.value as? [String: Any] {
+                    if let epochMs = FirebaseService.toDouble(dict["epoch_ms"]) {
+                        resolved = Date(timeIntervalSince1970: epochMs / 1000.0)
+                    } else if let ts = dict["timestamp"] as? String {
+                        resolved = ISO8601DateFormatter().date(from: ts)
+                    }
+                } else if let ts = snapshot.value as? String {
+                    resolved = ISO8601DateFormatter().date(from: ts)
+                }
+
+                let stamp = resolved ?? Date()
+                Task { @MainActor [weak self] in
+                    self?.lastHeartbeatDate = stamp
+                }
+            },
+            withCancel: { _ in }
+        )
+    }
+
     static func toDouble(_ v: Any?) -> Double? {
         switch v {
         case let n as NSNumber: return n.doubleValue
@@ -261,6 +305,21 @@ final class FirebaseService: ObservableObject {
         }
     }
 
+    /// Decode the Pi's light field, which is written as the string "light" or "dark".
+    /// Also accepts a raw Bool for forward compatibility.
+    static func lightStringToBool(_ v: Any?) -> Bool? {
+        switch v {
+        case let s as String:
+            switch s.lowercased() {
+            case "light", "on", "true",  "1": return true
+            case "dark",  "off","false", "0": return false
+            default: return nil
+            }
+        case let n as NSNumber: return n.boolValue
+        default: return nil
+        }
+    }
+
     static func toInt(_ v: Any?) -> Int? {
         switch v {
         case let n as NSNumber: return n.intValue
@@ -271,12 +330,4 @@ final class FirebaseService: ObservableObject {
         }
     }
 
-    static func lightStringToBool(_ v: Any?) -> Bool? {
-        guard let s = v as? String else { return nil }
-        switch s.lowercased() {
-        case "light", "on", "true": return true
-        case "dark", "off", "false": return false
-        default: return nil
-        }
-    }
 }

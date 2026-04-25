@@ -377,6 +377,8 @@ struct DogProfile: Codable {
 struct SensorData {
     var temperature:        Double?
     var humidity:           Double?
+    /// Decoded from the Pi's "light"/"dark" string (or raw Bool). Drives the
+    /// dashboard Light tile and the AlertManager light-edge tracking.
     var lightDetected:      Bool   = false
     var soundActive:        Bool   = false
     var barkDetected:       Bool   = false
@@ -385,6 +387,12 @@ struct SensorData {
     var motionDetected:     Bool   = false
     var lastMotion:         String = "never"
     var secondsSinceMotion: Int?
+    /// Consecutive writer-loop cycles (~5 s each) during which motion was detected.
+    /// Written by the Pi to kennel/sensors.motion_streak.
+    var motionStreak:       Int    = 0
+    /// Consecutive writer-loop cycles during which bark_detected or sustained_sound was active.
+    /// Written by the Pi to kennel/sensors.sound_streak.
+    var soundStreak:        Int    = 0
     var alertLevel:         String = "normal"
     var sleeping:           Bool   = false
     var alertReasons:       [String] = []
@@ -392,11 +400,14 @@ struct SensorData {
     var puppyAge:           String = ""
     var timestamp:          String = ""
 
+    /// Maps any incoming Pi level (including legacy "stress"/"emergency") onto the
+    /// active 3-tier model: normal | warning | critical.
     var normalizedAlertLevel: String {
         let value = alertLevel.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         switch value {
-        case "warning", "stress", "emergency", "normal": return value
-        default: return "normal"
+        case "warning":                   return "warning"
+        case "critical", "stress", "emergency": return "critical"
+        default:                          return "normal"
         }
     }
 }

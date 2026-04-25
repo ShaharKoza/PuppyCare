@@ -164,11 +164,11 @@ The Pi sensor script is not included in this repository. It must:
 
 1. Write sensor readings to Firebase paths using the Firebase Admin Python SDK or REST API:
    ```
-   kennel/dht     → { temperature, humidity, timestamp }
-   kennel/light   → { light_detected, timestamp }
-   kennel/sound   → { sound_active, bark_detected, bark_count_5s, sustained_sound }
-   kennel/pir     → { motion_detected, last_motion, seconds_since_motion }
-   kennel/alert   → { level, sleeping, puppy_mode, puppy_age, reasons, timestamp }
+   kennel/sensors  → { temperature, humidity, motion, sleeping, light ("light"|"dark"), motion_streak, sound_streak, timestamp }
+   kennel/sound    → { sound_active, bark_detected, bark_count_5s, sustained_sound }
+   kennel/alert    → { level, sleeping, puppy_mode, puppy_age, reasons, timestamp } (deduplicated)
+   kennel/heartbeat → { timestamp, epoch_ms } (every cycle — iOS surfaces "offline" if stale)
+   kennel/diagnostics → { uptime, last_loop, sensor health }
    ```
 
 2. Listen on `kennel/camera/capture_request` for changes, and when it fires:

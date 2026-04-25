@@ -23,7 +23,7 @@ final class ProfileStore: ObservableObject {
         normalizeProfileIfNeeded()
 
         // Push current thresholds and schedule to singletons immediately on launch.
-        syncThresholds(profile: profile)
+        syncAlertConfig(profile: profile)
         ReminderManager.shared.scheduleAllReminders(profile: profile)
     }
 
@@ -111,11 +111,6 @@ final class ProfileStore: ObservableObject {
         )
     }
 
-    // Keep legacy shim name for any call sites not yet migrated.
-    private func syncThresholds(profile: DogProfile) {
-        syncAlertConfig(profile: profile)
-    }
-
     // MARK: - Normalisation + one-time migration
 
     private func normalizeProfileIfNeeded() {
@@ -187,6 +182,23 @@ final class ProfileStore: ObservableObject {
                 updated.scheduleItems = migrated.sorted { $0.time < $1.time }
                 changed = true
             }
+        }
+
+        // ── One-time migration: populate derivedHealthReminders for legacy profiles ──
+        // Older profiles (created before DogProfileEngine was wired) have
+        // derivedHealthReminders == nil, which means ReminderManager can't schedule
+        // any vaccine notifications for them. Re-run the engine once so they pick
+        // up structured reminders with real due dates.
+        if updated.derivedHealthReminders == nil && updated.hasCompletedOnboarding {
+            let config = DogProfileEngine.derive(from: updated)
+            updated.derivedHealthReminders = config.healthReminders
+            if updated.selectedOperationalProfile == nil {
+                updated.selectedOperationalProfile = config.operationalProfile
+            }
+            if updated.derivedSensorDefaults == nil {
+                updated.derivedSensorDefaults = config.sensorDefaults
+            }
+            changed = true
         }
 
         if changed {
@@ -276,11 +288,3 @@ final class ProfileStore: ObservableObject {
     }
 }
 
-// MARK: - Tuple Equatable helper
-
-private func == (
-    lhs: (Double, Double, Double, Double),
-    rhs: (Double, Double, Double, Double)
-) -> Bool {
-    lhs.0 == rhs.0 && lhs.1 == rhs.1 && lhs.2 == rhs.2 && lhs.3 == rhs.3
-}

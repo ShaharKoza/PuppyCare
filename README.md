@@ -28,7 +28,7 @@
 
 ## Overview
 
-**PuppyCare** is a full-stack IoT product combining a Raspberry Pi sensor station with a native iOS app. It gives dog owners real-time visibility into their kennel environment: temperature, humidity, motion, light, sound, and live camera snapshots — all surfaced through an intelligent, design-forward mobile interface.
+**PuppyCare** is a full-stack IoT product combining a Raspberry Pi sensor station with a native iOS app. It gives dog owners real-time visibility into their kennel environment: temperature, humidity, motion, sound, ambient light, and live camera snapshots — all surfaced through an intelligent, design-forward mobile interface.
 
 The system uses **Firebase Realtime Database** as the communication backbone between the Pi and the iPhone, and **Firebase Cloud Messaging** to push critical alerts even when the app is in the background.
 
@@ -52,15 +52,16 @@ The system uses **Firebase Realtime Database** as the communication backbone bet
 
 ### Live Sensor Dashboard
 - Real-time temperature and humidity readings from a DHT22 sensor
-- Motion detection via PIR sensor with time-since-last-motion display
+- Motion detection via HC-SR501 PIR sensor with time-since-last-motion display
 - Sound and bark detection with 5-second burst counting
-- Light state monitoring (on/off transitions)
+- Ambient light state via LDR photoresistor (light/dark transitions)
 - Live kennel presence timer — starts the moment the dog enters, resets on exit
 
 ### Smart Alerts System
 - Automatic alerts for temperature out of range (customizable warn/critical thresholds)
 - Bark detection alerts with sustained-sound escalation
-- Motion and light change events
+- Motion change events
+- Light on/off transition events (edge-triggered, info-level)
 - Alerts history with date-grouped list, filter tabs, and search by type
 - Behavioral analytics: peak bark hour, most active period, temperature range summary
 - 12-hour bark frequency bar chart
@@ -82,7 +83,7 @@ The system uses **Firebase Realtime Database** as the communication backbone bet
 - Profile photo from the device camera roll
 
 ### Push Notifications
-- Firebase Cloud Functions (Node.js) deployed to trigger FCM push notifications for any non-normal alert level (warning, stress, emergency)
+- Firebase Cloud Functions (Node.js) deployed to trigger FCM push notifications for any non-normal alert level (warning, critical)
 - Local notifications for scheduled meal and walk reminders
 
 ### Onboarding
@@ -112,9 +113,8 @@ The system uses **Firebase Realtime Database** as the communication backbone bet
          ┌──────────────▼──────────────────────┐
          │        Firebase Realtime Database     │
          │  kennel/sensors (primary snapshot)    │
-         │  kennel/dht   · kennel/sound          │
-         │  kennel/pir   · kennel/light          │
-         │  kennel/alert · kennel/camera         │
+         │  kennel/sound · kennel/alert          │
+         │  kennel/camera · kennel/diagnostics   │
          │  kennel/fcm_token                     │
          └──────────┬──────────────┬─────────────┘
                     │              │
@@ -126,7 +126,7 @@ The system uses **Firebase Realtime Database** as the communication backbone bet
 ```
 
 **Data flow:**
-1. Raspberry Pi reads sensors every few seconds and writes structured JSON to Firebase paths (`kennel/sensors` primary snapshot, plus `kennel/sound`, `kennel/alert`, and detail paths `kennel/dht`, `kennel/pir`, `kennel/light`)
+1. Raspberry Pi reads sensors every few seconds and writes structured JSON to Firebase paths (`kennel/sensors` primary snapshot, plus `kennel/sound`, `kennel/alert`, `kennel/camera`, and `kennel/diagnostics`)
 2. `FirebaseService` (iOS) holds active `.observe(.value)` listeners on each path and updates `@Published var sensorData` on the main actor
 3. `AlertManager` receives every sensor update, applies cooldown and threshold logic, and appends `AlertRecord` entries to its persistent store
 4. Firebase Cloud Function triggers on `kennel/alert` writes and sends FCM push notifications to the registered device token
@@ -143,7 +143,7 @@ The system uses **Firebase Realtime Database** as the communication backbone bet
 | Push notifications | Firebase Cloud Messaging (FCM) + APNs |
 | Cloud Functions | Node.js 20, Firebase Functions v2 |
 | Hardware | Raspberry Pi (Python sensor script) |
-| Sensors | DHT22 (temp/humidity), PIR, sound module, light sensor, camera |
+| Sensors | DHT22 (temp/humidity), HC-SR501 PIR motion, KY-038 sound module, LDR photoresistor, camera |
 | Design system | Custom `AppTheme` with semantic tokens (colors, radii, spacing, typography) |
 
 ---
@@ -197,7 +197,7 @@ Select your target device and press `Cmd+R`.
 
 The Raspberry Pi companion script is not included in this repository. It should:
 
-1. Read sensors (DHT22, PIR, sound module, light sensor) at regular intervals
+1. Read sensors (DHT22, HC-SR501 PIR, KY-038 sound module, LDR photoresistor) at regular intervals
 2. Write JSON payloads to the Firebase paths below using the Firebase Admin SDK or REST API
 3. Listen to `kennel/camera/capture_request` and trigger a camera snapshot when it changes, then upload the image and write the URL to `kennel/camera/image_url`
 
@@ -209,9 +209,6 @@ kennel/
     temperature: Float
     humidity: Float
     timestamp: String (ISO 8601)
-  light/
-    light_detected: Boolean
-    timestamp: String
   sound/
     sound_active: Boolean
     bark_detected: Boolean
@@ -221,13 +218,18 @@ kennel/
     motion_detected: Boolean
     last_motion: String
     seconds_since_motion: Int
+  sensors/
+    light: String ("light" | "dark")   # LDR photoresistor digital out
   alert/
-    level: "normal" | "warning" | "stress" | "emergency"
+    level: "normal" | "warning" | "critical"
     sleeping: Boolean
     puppy_mode: Boolean
     puppy_age: String
     reasons: [String]
     timestamp: String
+  heartbeat/
+    timestamp: String                   # ISO 8601, written every cycle
+    epoch_ms: Int                       # iOS surfaces "Pi offline" if stale > 60 s
   camera/
     capture_request: ServerTimestamp (written by iOS app)
     image_url: String (written by Pi after capture)

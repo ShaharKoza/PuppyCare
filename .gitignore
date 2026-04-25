@@ -34,3 +34,9 @@ GoogleService-Info.plist
 
 # Logs
 *.log
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/

@@ -28,7 +28,7 @@ PuppyCare connects your iPhone to a Raspberry Pi sensor station installed in or 
 
 - The temperature and humidity inside the kennel
 - Whether your dog is moving, sleeping, or barking
-- When the kennel light turns on or off
+- Whether the kennel light is currently on or off
 - A live camera snapshot of the kennel, taken on demand
 
 Beyond live data, PuppyCare keeps a full history of events, detects behavioral patterns, manages your dog's feeding and daily routine, and sends push notifications to your phone the moment something needs your attention.
@@ -41,7 +41,7 @@ Beyond live data, PuppyCare keeps a full history of events, detects behavioral p
 |------|---------|
 | iPhone | Any iPhone running iOS 16 or later |
 | Internet | Wi-Fi or cellular — the app streams data in real time |
-| Kennel hardware | Raspberry Pi with DHT22, PIR, sound, light, and camera sensors |
+| Kennel hardware | Raspberry Pi with DHT22, HC-SR501 PIR, KY-038 sound module, LDR photoresistor, and camera |
 | Setup | The kennel hardware must already be configured and connected to the same Firebase project |
 
 > If you are not sure whether the hardware is set up, ask the person who configured your system. The app will still work for profile management and routine planning even without a live connection.
@@ -88,6 +88,7 @@ A small indicator at the top of the screen shows whether the app is live-connect
 | **Humidity** | Relative humidity percentage |
 | **Motion** | Whether motion is currently detected, and how long ago the last movement was |
 | **Sound** | Whether barking or sound is currently active |
+| **Light** | Whether the kennel is lit or dark, based on the LDR photoresistor |
 
 Tap any tile to see a short history chart for that sensor.
 
@@ -136,7 +137,7 @@ Use the filter chips below the chart to narrow the list:
 - **Temperature** — only temperature alerts
 - **Sound** — only bark/sound alerts
 - **Motion** — only motion detection events
-- **Light** — only light on/off events
+- **Light** — only kennel light on/off transitions
 
 ### Managing alerts
 
@@ -251,7 +252,7 @@ PuppyCare sends two types of notifications to your phone:
 
 ### 1. Critical kennel alerts (push notifications)
 
-These come from the Firebase Cloud Function and arrive even when the app is fully closed. They fire when the kennel alert level changes to **warning**, **stress**, or **emergency** — for example:
+These come from the Firebase Cloud Function and arrive even when the app is fully closed. They fire when the kennel alert level changes to **warning** or **critical** — for example:
 - Temperature dangerously high or low
 - Repeated sustained barking
 - Multiple simultaneous sensor triggers
