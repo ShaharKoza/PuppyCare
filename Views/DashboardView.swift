@@ -34,7 +34,14 @@ struct DashboardView: View {
         return String(iso.suffix(8).prefix(5))
     }
 
-    private var normalizedLevel: String { firebase.sensorData.normalizedAlertLevel }
+    /// Effective alert level for the dashboard headline.
+    /// Forces "critical" when sound + motion are both currently active, so the
+    /// pill goes red the moment the user's sensors light up — even if the Pi
+    /// hasn't yet escalated kennel/alert.level on its end.
+    private var normalizedLevel: String {
+        if isLiveCombinedActivity { return "critical" }
+        return firebase.sensorData.normalizedAlertLevel
+    }
 
     private var statusTitle: String {
         switch normalizedLevel {
@@ -122,6 +129,18 @@ struct DashboardView: View {
             .trimmingCharacters(in: .whitespacesAndNewlines)
             .lowercased()
         return level.isEmpty || level == "normal"
+    }
+
+    /// True when motion AND sound are BOTH currently active right now, derived
+    /// directly from the live tile state. The dashboard surfaces this as an
+    /// immediate Critical banner so the user sees the combined event the moment
+    /// both signals appear — without waiting for the Pi alert pipeline or the
+    /// AlertManager combined-window to fire.
+    private var isLiveCombinedActivity: Bool {
+        let s = firebase.sensorData
+        let soundOn  = s.soundActive || s.barkDetected || s.sustainedSound
+        let motionOn = s.motionDetected
+        return soundOn && motionOn
     }
 
     /// Reasons to display in the headline. Empty array means "all quiet" —
@@ -451,7 +470,46 @@ struct DashboardView: View {
             }
 
             VStack(alignment: .leading, spacing: 8) {
-                if !cleanedAlertReasons.isEmpty {
+                if isLiveCombinedActivity {
+                    // Highest priority: motion AND sound right now → immediate Critical banner.
+                    // This shows the moment both signals appear on the dashboard, regardless
+                    // of whether the Pi alert pipeline or AlertManager combined-window
+                    // has had time to fire yet.
+                    Button {
+                        showAlertsHistory = true
+                    } label: {
+                        HStack(spacing: 10) {
+                            ZStack {
+                                Circle()
+                                    .fill(Color.red.opacity(0.14))
+                                    .frame(width: 32, height: 32)
+
+                                Image(systemName: "exclamationmark.triangle.fill")
+                                    .font(.system(size: 14, weight: .semibold))
+                                    .foregroundStyle(Color.red)
+                            }
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Activity + noise in kennel")
+                                    .font(.system(size: 15, weight: .semibold))
+                                    .foregroundStyle(.primary)
+                                    .lineLimit(1)
+
+                                Text("Critical · happening now")
+                                    .font(.system(size: 12, weight: .medium))
+                                    .foregroundStyle(Color.red)
+                            }
+
+                            Spacer(minLength: 0)
+
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 12, weight: .bold))
+                                .foregroundStyle(.tertiary)
+                        }
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                } else if !cleanedAlertReasons.isEmpty {
                     // Live Pi-side reasons take precedence.
                     ForEach(cleanedAlertReasons.prefix(2), id: \.self) { reason in
                         HStack(alignment: .top, spacing: 10) {
