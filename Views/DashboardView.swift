@@ -2,6 +2,7 @@ import SwiftUI
 
 struct DashboardView: View {
     @EnvironmentObject var profileStore: ProfileStore
+    @EnvironmentObject var loc: Localization
     @ObservedObject private var firebase = FirebaseService.shared
     @ObservedObject private var alertManager = AlertManager.shared
     @ObservedObject private var historyStore = SensorHistoryStore.shared
@@ -45,22 +46,22 @@ struct DashboardView: View {
 
     private var statusTitle: String {
         switch normalizedLevel {
-        case "critical": return "Immediate attention needed"
-        case "warning":  return "Environment needs attention"
-        default:         return "Environment looks stable"
+        case "critical": return loc.t("Immediate attention needed")
+        case "warning":  return loc.t("Environment needs attention")
+        default:         return loc.t("Environment looks stable")
         }
     }
 
     private var levelPillText: String {
         switch normalizedLevel {
-        case "critical": return "Critical"
-        case "warning":  return "Warning"
-        default:         return "Normal"
+        case "critical": return loc.t("Critical")
+        case "warning":  return loc.t("Warning")
+        default:         return loc.t("Normal")
         }
     }
 
     private var sleepPillText: String {
-        firebase.sensorData.sleeping ? "Sleeping" : "Awake"
+        firebase.sensorData.sleeping ? loc.t("Sleeping") : loc.t("Awake")
     }
 
     private var levelAccent: Color {
@@ -82,7 +83,7 @@ struct DashboardView: View {
     }
 
     private var presenceText: String {
-        profileStore.profile.isInKennel ? "Dog is in the kennel" : "Dog is outside the kennel"
+        profileStore.profile.isInKennel ? loc.t("Dog is in the kennel") : loc.t("Dog is outside the kennel")
     }
 
     private var presenceTint: Color {
@@ -116,8 +117,8 @@ struct DashboardView: View {
         return String(format: "%.1f%%", value)
     }
 
-    private var motionText: String { firebase.sensorData.motionDetected ? "Detected" : "Still" }
-    private var soundText: String { firebase.sensorData.soundActive ? "Active" : "Quiet" }
+    private var motionText: String { firebase.sensorData.motionDetected ? loc.t("Detected") : loc.t("Still") }
+    private var soundText: String { firebase.sensorData.soundActive ? loc.t("Active") : loc.t("Quiet") }
     private var barkCountText: String { "\(firebase.sensorData.barkCount5s)" }
 
     /// True iff the Pi's current alert level is "normal" (or absent).
@@ -393,7 +394,7 @@ struct DashboardView: View {
                 spacing: 10
             ) {
                 sensorTile(
-                    title: "Temperature",
+                    title: loc.t("Temperature"),
                     value: temperatureText,
                     symbol: isTempStale ? "thermometer.trianglebadge.exclamationmark" : "thermometer.medium",
                     tint: isTempStale ? .orange : .red.opacity(0.75),
@@ -402,7 +403,7 @@ struct DashboardView: View {
                 )
 
                 sensorTile(
-                    title: "Humidity",
+                    title: loc.t("Humidity"),
                     value: humidityText,
                     symbol: "drop.fill",
                     tint: .blue,
@@ -410,29 +411,29 @@ struct DashboardView: View {
                 )
 
                 sensorTile(
-                    title: "Motion",
+                    title: loc.t("Motion"),
                     value: motionText,
                     symbol: "figure.walk",
                     tint: .green
                 )
 
                 sensorTile(
-                    title: "Sound",
+                    title: loc.t("Sound"),
                     value: soundText,
                     symbol: firebase.sensorData.soundActive ? "speaker.wave.2.fill" : "speaker.slash.fill",
                     tint: firebase.sensorData.soundActive ? .blue : .gray
                 )
 
                 sensorTile(
-                    title: "Bark Count",
+                    title: loc.t("Bark Count"),
                     value: barkCountText,
                     symbol: "waveform",
                     tint: .pink
                 )
 
                 sensorTile(
-                    title: "Light",
-                    value: firebase.sensorData.lightDetected ? "Light" : "Dark",
+                    title: loc.t("Light"),
+                    value: firebase.sensorData.lightDetected ? loc.t("Light") : loc.t("Dark"),
                     symbol: firebase.sensorData.lightDetected ? "lightbulb.fill" : "moon.fill",
                     tint: firebase.sensorData.lightDetected ? .yellow : .indigo
                 )
@@ -443,7 +444,7 @@ struct DashboardView: View {
     private var alertsCard: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Text("Alerts & Insights")
+                Text(loc.t("Alerts & Insights"))
                     .font(AppTheme.sectionTitleFont)
 
                 Spacer()
@@ -452,7 +453,7 @@ struct DashboardView: View {
                     showAlertsHistory = true
                 } label: {
                     HStack(spacing: 5) {
-                        Text("History")
+                        Text(loc.t("History"))
                             .font(.system(size: 14, weight: .semibold))
 
                         if alertManager.unreadCount > 0 {
@@ -490,12 +491,12 @@ struct DashboardView: View {
                             }
 
                             VStack(alignment: .leading, spacing: 2) {
-                                Text("Activity + noise in kennel")
+                                Text(loc.t("Activity + noise in kennel"))
                                     .font(.system(size: 15, weight: .semibold))
                                     .foregroundStyle(.primary)
                                     .lineLimit(1)
 
-                                Text("Critical · happening now")
+                                Text(loc.t("Critical · happening now"))
                                     .font(.system(size: 12, weight: .medium))
                                     .foregroundStyle(Color.red)
                             }
@@ -568,14 +569,14 @@ struct DashboardView: View {
                             .font(.system(size: 16, weight: .semibold))
                             .foregroundStyle(.green)
 
-                        Text("No active alerts")
+                        Text(loc.t("No active alerts"))
                             .font(.system(size: 15, weight: .semibold))
                             .foregroundStyle(.primary)
 
                         Spacer(minLength: 0)
                     }
 
-                    Text("All sensors are within normal range.")
+                    Text(loc.t("All sensors are within normal range."))
                         .font(.system(size: 12))
                         .foregroundStyle(.secondary)
                 }

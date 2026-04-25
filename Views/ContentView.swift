@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ContentView: View {
     @EnvironmentObject var profileStore: ProfileStore
+    @EnvironmentObject var loc: Localization
     @ObservedObject private var alertManager = AlertManager.shared
     @State private var selectedTab: Int = 0
 
@@ -38,7 +39,7 @@ struct ContentView: View {
                 DashboardView(selectedTab: $selectedTab)
                     .environmentObject(profileStore)
             }
-            .tabItem { Label("Home", systemImage: "house.fill") }
+            .tabItem { Label(loc.t("Home"), systemImage: "house.fill") }
             .badge(alertManager.unreadCount)
             .tag(0)
 
@@ -47,7 +48,7 @@ struct ContentView: View {
                 DailyRoutineView()
                     .environmentObject(profileStore)
             }
-            .tabItem { Label("Routine", systemImage: "list.bullet.clipboard.fill") }
+            .tabItem { Label(loc.t("Routine"), systemImage: "list.bullet.clipboard.fill") }
             .tag(1)
 
             // MARK: Food Assistant
@@ -55,7 +56,7 @@ struct ContentView: View {
                 FoodAssistantView()
                     .environmentObject(profileStore)
             }
-            .tabItem { Label("Assistant", systemImage: "sparkles") }
+            .tabItem { Label(loc.t("Assistant"), systemImage: "sparkles") }
             .tag(2)
 
             // MARK: Profile
@@ -63,9 +64,12 @@ struct ContentView: View {
                 ProfileView()
                     .environmentObject(profileStore)
             }
-            .tabItem { Label("Profile", systemImage: "person.crop.circle") }
+            .tabItem { Label(loc.t("Profile"), systemImage: "person.crop.circle") }
             .tag(3)
         }
         .tint(AppTheme.accentBrown)
+        // Force the TabView to re-render when the language toggles —
+        // tabItem labels are computed once on first render otherwise.
+        .id(loc.language)
     }
 }

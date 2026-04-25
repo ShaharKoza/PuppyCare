@@ -3,6 +3,7 @@ import PhotosUI
 
 struct ProfileView: View {
     @EnvironmentObject var profileStore: ProfileStore
+    @EnvironmentObject var loc: Localization
 
     @State private var isEditing               = false
     @State private var selectedPhotoItem: PhotosPickerItem?
@@ -50,6 +51,7 @@ struct ProfileView: View {
                 kennelCard
                 overviewCard
                 if isEditing { editableDetailsCard } else { compactDetailsCard }
+                languageCard
                 aboutCard
                 dataCard
             }
@@ -70,7 +72,7 @@ struct ProfileView: View {
     private var topBar: some View {
         HStack {
             Spacer()
-            Button(isEditing ? "Done" : "Edit") {
+            Button(isEditing ? loc.t("Done") : loc.t("Edit Profile")) {
                 withAnimation(.easeInOut(duration: 0.2)) { isEditing.toggle() }
             }
             .font(.system(size: 17, weight: .semibold))
@@ -473,11 +475,50 @@ struct ProfileView: View {
         }
     }
 
+    // MARK: - Language card
+
+    private var languageCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(loc.t("Language")).font(AppTheme.sectionTitleFont)
+
+            HStack(spacing: 14) {
+                ZStack {
+                    Circle()
+                        .fill(AppTheme.accentBrown.opacity(0.14))
+                        .frame(width: 36, height: 36)
+                    Image(systemName: "globe")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(AppTheme.accentBrown)
+                }
+
+                Text(loc.t("Language"))
+                    .font(AppTheme.bodyFont)
+                    .foregroundStyle(.primary)
+
+                Spacer(minLength: 0)
+
+                Picker("", selection: $loc.language) {
+                    ForEach(AppLanguage.allCases) { lang in
+                        Text(lang.displayName).tag(lang)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .frame(maxWidth: 180)
+            }
+            .padding(.horizontal, AppTheme.innerTilePadding)
+            .padding(.vertical, 12)
+            .background(AppTheme.warmTile)
+            .clipShape(RoundedRectangle(cornerRadius: AppTheme.tileRadius, style: .continuous))
+        }
+        .padding(AppTheme.cardPadding)
+        .cardStyle()
+    }
+
     // MARK: - About card
 
     private var aboutCard: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("About").font(AppTheme.sectionTitleFont)
+            Text(loc.t("About")).font(AppTheme.sectionTitleFont)
 
             VStack(spacing: 0) {
                 aboutLinkRow(
@@ -505,7 +546,7 @@ struct ProfileView: View {
                             .font(.system(size: 16, weight: .semibold))
                             .foregroundStyle(.secondary)
                     }
-                    Text("Version")
+                    Text(loc.t("Version"))
                         .font(AppTheme.bodyFont)
                         .foregroundStyle(.primary)
                     Spacer(minLength: 0)
