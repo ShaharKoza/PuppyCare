@@ -406,9 +406,16 @@ enum DogProfileEngine {
 
     static func urgency(for item: HealthReminderItem) -> ReminderUrgency {
         guard let due = item.dueDate else { return .noDate }
-        let days = Calendar.current.dateComponents([.day], from: Date(), to: due).day ?? 0
-        if days < 0  { return .overdue }
-        if days <= 7 { return .withinWeek }
+        // Use startOfDay on both sides so this matches the user-visible
+        // "Overdue by N days" / "Due today" copy elsewhere in the app.
+        // Without this, a reminder due "yesterday 18:00" was simultaneously
+        // showing "Overdue by 1 day" text but a non-overdue (orange) color.
+        let cal = Calendar.current
+        let days = cal.dateComponents([.day],
+                                      from: cal.startOfDay(for: Date()),
+                                      to:   cal.startOfDay(for: due)).day ?? 0
+        if days < 0   { return .overdue }
+        if days <= 7  { return .withinWeek }
         if days <= 30 { return .withinMonth }
         return .upcoming
     }

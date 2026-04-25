@@ -303,8 +303,17 @@ struct DogProfile: Codable {
 
     // MARK: - Derived helpers
 
+    /// Live age in months. When `birthDate` is set, we always derive from it
+    /// so the value tracks real time — without this, a dog aged-up past the
+    /// puppy threshold would keep using puppy alert rules until the user
+    /// re-saved the profile. Falls back to the stored `ageMonths` string only
+    /// when no birth date is available (legacy profiles).
     var ageMonthsValue: Double? {
-        Double(ageMonths.trimmingCharacters(in: .whitespacesAndNewlines))
+        if let bd = birthDate {
+            let months = Calendar.current.dateComponents([.month], from: bd, to: Date()).month ?? 0
+            return Double(max(0, months))
+        }
+        return Double(ageMonths.trimmingCharacters(in: .whitespacesAndNewlines))
     }
 
     var isCompleteForOnboarding: Bool {

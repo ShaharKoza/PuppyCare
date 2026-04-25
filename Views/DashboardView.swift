@@ -816,7 +816,12 @@ struct DashboardView: View {
 
     private func dueColor(for item: HealthReminderItem) -> Color {
         guard let due = item.dueDate else { return .secondary }
-        let days = Calendar.current.dateComponents([.day], from: Date(), to: due).day ?? 0
+        // Match dueText: compare at day granularity so the pill color and the
+        // "Overdue by N days" text always agree.
+        let cal = Calendar.current
+        let days = cal.dateComponents([.day],
+                                      from: cal.startOfDay(for: Date()),
+                                      to:   cal.startOfDay(for: due)).day ?? 0
         if days < 0   { return .red }
         if days <= 7  { return .orange }
         return AppTheme.accentBrown
