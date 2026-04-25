@@ -30,7 +30,16 @@ Pods/
 
 # Environment / secrets
 .env
+.env.*
 GoogleService-Info.plist
+*firebase-key*.json
+puppycare-firebase-key.json
+
+# Node (Firebase Cloud Functions)
+node_modules/
+functions/node_modules/
+firebase-debug.log
+.firebase/
 
 # Logs
 *.log
