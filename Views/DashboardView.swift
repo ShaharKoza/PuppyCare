@@ -239,7 +239,12 @@ struct DashboardView: View {
 
     var body: some View {
         ScrollView(showsIndicators: false) {
-            VStack(alignment: .leading, spacing: 10) {
+            // Outer column keeps a stable centered layout. Now that every
+            // .cardStyle() child fills maxWidth itself, the column can use
+            // a neutral .center alignment — eliminating the sideways drift
+            // a user noticed when toggling language direction (RTL flips
+            // .leading to the opposite side, making content jump).
+            VStack(spacing: 10) {
                 headerSection
 
                 if showConnectivityBanner && !firebase.isConnected {
@@ -256,7 +261,7 @@ struct DashboardView: View {
                     vaccineCard
                 }
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(maxWidth: .infinity)
             .padding(.horizontal, AppTheme.horizontalPadding)
             .padding(.top, 6)
             .padding(.bottom, 16)

@@ -50,6 +50,12 @@ enum AppTheme {
 struct CardStyle: ViewModifier {
     func body(content: Content) -> some View {
         content
+            // Every card fills the full available width so it never collapses
+            // around its narrowest child. Without this, cards with short
+            // content (e.g. a single-row "No active alerts") would sit only
+            // as wide as that row and align to one side — visually "drifting"
+            // when scrolling between cards or toggling language direction.
+            .frame(maxWidth: .infinity, alignment: .leading)
             .background(
                 RoundedRectangle(cornerRadius: AppTheme.cardRadius, style: .continuous)
                     .fill(AppTheme.cardFill)
