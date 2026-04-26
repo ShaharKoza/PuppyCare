@@ -13,5 +13,18 @@
         <key>NSAllowsLocalNetworking</key>
         <true/>
     </dict>
+
+    <!-- Bonjour services the app advertises / browses for.
+         Required since iOS 14 BEFORE the OS will resolve any *.local
+         hostname or talk to a non-public IP — without this, even with
+         the local-network permission granted, mDNS lookup of
+         raspberrypi.local fails silently and the camera AsyncImage
+         drops into the failure case. The two HTTP service types cover
+         the MJPEG streamer (port 8081) and any future TLS variant. -->
+    <key>NSBonjourServices</key>
+    <array>
+        <string>_http._tcp</string>
+        <string>_https._tcp</string>
+    </array>
 </dict>
 </plist>
