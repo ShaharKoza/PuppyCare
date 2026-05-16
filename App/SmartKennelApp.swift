@@ -31,6 +31,13 @@ struct PuppyCareApp: App {
                     switch newPhase {
                     case .active:
                         FirebaseService.shared.startListening()
+                        // Re-derive the dog's operational profile + health
+                        // reminders against the CURRENT calendar — a dog that
+                        // aged past the puppy threshold while the app was
+                        // backgrounded would otherwise keep using puppy alert
+                        // rules, and the rabies due date would never roll to
+                        // the next anniversary.
+                        profileStore.recomputeDerivedConfiguration()
                     case .background, .inactive:
                         profileStore.saveImmediately()
                     default:

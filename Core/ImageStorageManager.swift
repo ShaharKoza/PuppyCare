@@ -17,14 +17,26 @@ final class ImageStorageManager {
 
     /// Compresses and saves a UIImage to the Documents/profile_images directory.
     /// Returns the filename on success, nil on failure.
+    ///
+    /// Implementation note — write is atomic relative to the final filename:
+    ///   1. Write the JPEG to "<filename>.tmp" first.
+    ///   2. If that succeeds, atomically rename to the final filename via
+    ///      .atomic option on Data.write — POSIX guarantees the rename is
+    ///      either fully visible or not visible at all.
+    /// Without this, a write that fails halfway (out-of-space, app killed
+    /// mid-write) left a partial JPEG that UIImage(data:) silently rejected
+    /// later, and the profile's filename pointer became a dangling reference.
     func saveImage(_ image: UIImage) -> String? {
         guard let data = image.jpegData(compressionQuality: 0.65) else { return nil }
         let filename = "dog_profile_\(UUID().uuidString).jpg"
         let url = directory.appendingPathComponent(filename)
         do {
-            try data.write(to: url)
+            try data.write(to: url, options: [.atomic])
             return filename
         } catch {
+            // Clean up any partial file the failed write may have left behind
+            // so subsequent loadImage() calls return nil instead of decoding garbage.
+            try? FileManager.default.removeItem(at: url)
             return nil
         }
     }

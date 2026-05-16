@@ -436,13 +436,17 @@ struct OnboardingView: View {
             let image = UIImage(data: data)
         else { return }
 
-        if !profileStore.profile.profileImageFilename.isEmpty {
-            ImageStorageManager.shared.deleteImage(
-                filename: profileStore.profile.profileImageFilename
-            )
+        // Save the new image FIRST, swap the profile reference, then delete the old.
+        // The previous order (delete → save) would leave the profile pointing at a
+        // deleted file if the save failed for any reason (out-of-space, app killed
+        // mid-write) — the avatar would then disappear with no way to recover.
+        let oldFilename = profileStore.profile.profileImageFilename
+        guard let newFilename = ImageStorageManager.shared.saveImage(image) else {
+            return  // Save failed; old image is still intact.
         }
-        if let filename = ImageStorageManager.shared.saveImage(image) {
-            profileStore.profile.profileImageFilename = filename
+        profileStore.profile.profileImageFilename = newFilename
+        if !oldFilename.isEmpty, oldFilename != newFilename {
+            ImageStorageManager.shared.deleteImage(filename: oldFilename)
         }
     }
 }

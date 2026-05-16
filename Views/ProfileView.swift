@@ -679,11 +679,13 @@ struct ProfileView: View {
             let image = UIImage(data: data)
         else { return }
 
-        if !profileStore.profile.profileImageFilename.isEmpty {
-            ImageStorageManager.shared.deleteImage(filename: profileStore.profile.profileImageFilename)
-        }
-        if let filename = ImageStorageManager.shared.saveImage(image) {
-            profileStore.profile.profileImageFilename = filename
+        // Save-new → swap → delete-old (atomic-ish). Old order (delete → save)
+        // could leave the profile pointing at a deleted file if the save failed.
+        let oldFilename = profileStore.profile.profileImageFilename
+        guard let newFilename = ImageStorageManager.shared.saveImage(image) else { return }
+        profileStore.profile.profileImageFilename = newFilename
+        if !oldFilename.isEmpty, oldFilename != newFilename {
+            ImageStorageManager.shared.deleteImage(filename: oldFilename)
         }
     }
 }

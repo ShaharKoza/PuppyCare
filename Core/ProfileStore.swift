@@ -251,6 +251,49 @@ final class ProfileStore: ObservableObject {
         saveImmediately()
     }
 
+    /// Refresh derived configuration based on the dog's CURRENT live age.
+    ///
+    /// Most of `DogProfile`'s derived fields (`selectedOperationalProfile`,
+    /// `derivedSensorDefaults`, `derivedHealthReminders`) are computed at
+    /// setup time and cached. That's fine — they reflect the dog at that
+    /// moment. But the dog ages over time: a 3-month-old puppy that was set
+    /// up as `.youngPuppy` should become `.smallDog` (or whatever its size
+    /// group implies) once it crosses 4 months — and the rabies anniversary
+    /// shifts forward every year.
+    ///
+    /// This method is safe to call frequently. It re-runs the engine, and
+    /// updates the profile ONLY if any meaningful field changed — so the
+    /// auto-save / reminder reschedule loops don't churn on every launch.
+    ///
+    /// Called from `SmartKennelApp` on `.active` scenePhase so the dashboard
+    /// reflects current age each time the user opens the app.
+    func recomputeDerivedConfiguration() {
+        guard profile.hasCompletedProfileSetup else { return }
+
+        let freshConfig = DogProfileEngine.derive(from: profile)
+        let cachedOp    = profile.selectedOperationalProfile
+        let cachedSens  = profile.derivedSensorDefaults
+        let cachedHR    = profile.derivedHealthReminders
+
+        // Cheap "did anything change" check — operational profile flip is the
+        // main signal; we also re-emit reminders whenever the rabies due-date
+        // has rolled to a new anniversary.
+        let opChanged       = cachedOp != freshConfig.operationalProfile
+        let sensorsChanged  = cachedSens?.tempWarnHigh != freshConfig.sensorDefaults.tempWarnHigh
+                           || cachedSens?.tempCriticalHigh != freshConfig.sensorDefaults.tempCriticalHigh
+        let remindersChanged = cachedHR?.items.first(where: { $0.category == .rabies })?.dueDate
+                            != freshConfig.healthReminders.items.first(where: { $0.category == .rabies })?.dueDate
+
+        guard opChanged || sensorsChanged || remindersChanged else {
+            // Nothing meaningful changed — but still push the current config to
+            // AlertManager in case it was reset (e.g. after a force-quit).
+            syncAlertConfig(profile: profile)
+            return
+        }
+
+        applyDerivedConfiguration(freshConfig)
+    }
+
     // MARK: - Legacy meal-time calculation (used only for migration)
 
     private func legacyMealTimes(firstTimeString: String, mealsCount: Int) -> [Date] {

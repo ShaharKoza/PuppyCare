@@ -101,25 +101,19 @@ struct CameraCardView: View {
                                 showFullScreen = true
                             }
 
-                        if let updatedAt {
-                            Text("Last snapshot: \(relativeTime(from: updatedAt))")
-                                .font(.system(size: 11, weight: .medium))
-                                .foregroundStyle(.white)
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 6)
-                                .background(.black.opacity(0.55))
-                                .clipShape(Capsule())
-                                .padding(10)
-                        } else {
-                            Text("Snapshot \(Self.timeFormatter.string(from: Date()))")
-                                .font(.system(size: 11, weight: .medium))
-                                .foregroundStyle(.white)
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 6)
-                                .background(.black.opacity(0.55))
-                                .clipShape(Capsule())
-                                .padding(10)
-                        }
+                        // Show the snapshot's real timestamp when we have one.
+                        // If updatedAt is nil — we got the image but lost the
+                        // timestamp metadata — show "Live stream" rather than
+                        // the current time, which would falsely claim the
+                        // image was just captured.
+                        Text(updatedAt.map { "Last snapshot: \(relativeTime(from: $0))" } ?? "Live stream")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 6)
+                            .background(.black.opacity(0.55))
+                            .clipShape(Capsule())
+                            .padding(10)
                     }
 
                 case .failure:

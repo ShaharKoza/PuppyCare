@@ -10,7 +10,11 @@ final class ReminderManager {
     private let center       = UNUserNotificationCenter.current()
     private let idPrefix     = "com.smartkennel.routine."
     private let healthPrefix = "com.smartkennel.health."
-    private let maxSlots     = 20   // upper bound on schedule items we'll ever schedule
+
+    /// Soft cap on how many routine items we'll ever schedule. iOS itself
+    /// caps pending local notifications at 64 across the whole app, so we
+    /// reserve ~half for routine items and the rest for health reminders.
+    private let maxRoutineSlots = 30
 
     /// Hour of day (local time) to fire health reminders on their due date.
     private let healthFireHour = 9
@@ -32,11 +36,20 @@ final class ReminderManager {
         }
     }
 
-    /// Removes all PuppyCare routine notifications.
+    /// Removes ALL pending PuppyCare notifications (both routine and health).
+    /// Queries the system for every pending request whose identifier matches
+    /// our prefixes — index-agnostic, so it cleans up reminders left over
+    /// from older app versions, deleted schedule items, or renamed slots.
     func cancelAllReminders() {
-        let ids = (0..<maxSlots).map { idPrefix + "\($0)" }
-        center.removePendingNotificationRequests(withIdentifiers: ids)
-        cancelAllHealthReminders()
+        Task { [idPrefix, healthPrefix, center] in
+            let pending = await center.pendingNotificationRequests()
+            let stale   = pending
+                .map(\.identifier)
+                .filter { $0.hasPrefix(idPrefix) || $0.hasPrefix(healthPrefix) }
+            if !stale.isEmpty {
+                center.removePendingNotificationRequests(withIdentifiers: stale)
+            }
+        }
     }
 
     /// Removes all pending health-reminder notifications.
@@ -54,8 +67,16 @@ final class ReminderManager {
     // MARK: - Internal scheduling
 
     private func scheduleRoutineReminders(items: [ScheduleItem], profile: DogProfile) async {
-        // Clear all existing routine slots
-        cancelAllReminders()
+        // ── Wipe every existing routine request first ──────────────────────
+        // We query by prefix instead of by index range so reminders left over
+        // from deleted/renamed schedule items get cleaned up — the old code
+        // only cleared indices 0..<maxSlots, which leaked any request whose
+        // index drifted up when items in the middle of the list were removed.
+        let pending = await center.pendingNotificationRequests()
+        let stale   = pending.map(\.identifier).filter { $0.hasPrefix(idPrefix) }
+        if !stale.isEmpty {
+            center.removePendingNotificationRequests(withIdentifiers: stale)
+        }
 
         guard !items.isEmpty else { return }
 
@@ -64,8 +85,14 @@ final class ReminderManager {
         let food     = profile.foodName.trimmingCharacters(in: .whitespacesAndNewlines)
 
         let sorted = items.sorted { $0.time < $1.time }
+        if sorted.count > maxRoutineSlots {
+            // iOS only keeps 64 pending local notifications app-wide. If the
+            // user has 31+ schedule items, we silently dropped the rest — log
+            // it so the developer notices in the simulator console.
+            print("[ReminderManager] WARNING: \(sorted.count) routine items; scheduling first \(maxRoutineSlots).")
+        }
 
-        for (index, item) in sorted.prefix(maxSlots).enumerated() {
+        for item in sorted.prefix(maxRoutineSlots) {
             let parts = item.time.split(separator: ":").compactMap { Int($0) }
             guard parts.count == 2 else { continue }
 
@@ -97,9 +124,11 @@ final class ReminderManager {
             components.hour   = parts[0]
             components.minute = parts[1]
 
+            // Deterministic ID: stable across reorders, scoped to the item's
+            // own UUID so renaming a meal doesn't strand the old reminder.
             let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: true)
             let request = UNNotificationRequest(
-                identifier: idPrefix + "\(index)",
+                identifier: idPrefix + item.id.uuidString,
                 content: content,
                 trigger: trigger
             )
