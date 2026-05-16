@@ -76,7 +76,8 @@
       },
 
       "fcm_token": {
-        ".read":  true,
+        "//": "Write-only from the iOS client. The Cloud Function reads it via the Admin SDK (which bypasses these rules), so public read is never needed. Leaving .read open would let anyone with the project ID exfiltrate the token and send push notifications to the user's device.",
+        ".read":  false,
         ".write": "auth != null",
         ".validate": "newData.isString() && newData.val().length > 10"
       }
