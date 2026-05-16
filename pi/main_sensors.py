@@ -506,6 +506,47 @@ def _load_remote_thresholds():
     except Exception as e:
         log.warning("Could not load remote thresholds: %s", e)
 
+# ── Network-resilient write helper ────────────────────────────────────────────
+#
+# Without retries a transient network blip drops a whole cycle of sensor data,
+# and the iOS app sees the heartbeat go stale. With a tight retry loop we keep
+# the dashboard live even on flaky home Wi-Fi. We also stamp every successful
+# write into a module-level monotonic timestamp that gets surfaced in
+# kennel/diagnostics.last_successful_write_age_s — so the iOS app can warn the
+# user when the Pi is up but its uplink is broken (heartbeat alone can't
+# distinguish those two cases).
+
+_last_successful_write_monotonic = 0.0
+_failed_write_count_since_success = 0
+
+def _safe_write(operation, label: str, max_attempts: int = 3):
+    """Run a Firebase write with exponential backoff.
+
+    `operation` is a zero-arg callable; failures are logged and counted but
+    never re-raised — the writer loop must keep running even when the network
+    drops entirely.
+    """
+    global _last_successful_write_monotonic, _failed_write_count_since_success
+    delay = 0.5
+    for attempt in range(1, max_attempts + 1):
+        try:
+            operation()
+            _last_successful_write_monotonic = time.monotonic()
+            _failed_write_count_since_success = 0
+            return True
+        except Exception as e:
+            if attempt < max_attempts:
+                log.warning("Firebase %s failed (attempt %d/%d): %s — retrying in %.1fs",
+                            label, attempt, max_attempts, e, delay)
+                time.sleep(delay)
+                delay = min(delay * 2, 4.0)
+            else:
+                log.error("Firebase %s failed after %d attempts: %s",
+                          label, max_attempts, e)
+                _failed_write_count_since_success += 1
+    return False
+
+
 def firebase_writer_loop():
     """Main Firebase push loop."""
     _load_remote_thresholds()
@@ -567,6 +608,14 @@ def firebase_writer_loop():
         alert_changed, level, reasons = _alert_sm.transition(raw_level, reasons)
 
         # ── kennel/diagnostics (internal) ────────────────────────────────────
+        # last_successful_write_age_s lets the iOS app distinguish two failure
+        # modes that look the same on the dashboard:
+        #   (a) Pi is dead          → heartbeat stale + diagnostics stale
+        #   (b) Pi up, no uplink    → heartbeat stale + last_successful_write
+        #                             grows steadily but diagnostics keeps the
+        #                             count of consecutive failures
+        last_write_age = (int(time.monotonic() - _last_successful_write_monotonic)
+                          if _last_successful_write_monotonic > 0 else -1)
         diag_payload = {
             "dht_total_errors":         snap["dht_total_errors"],
             "dht_consecutive_failures": snap["dht_consecutive_failures"],
@@ -576,29 +625,30 @@ def firebase_writer_loop():
             "alert_level":              level,
             "motion_streak":            _motion_streak,
             "sound_streak":             _sound_streak,
+            "last_successful_write_age_s":   last_write_age,
+            "failed_writes_since_success":   _failed_write_count_since_success,
         }
 
-        try:
-            db_ref.child("sensors").update(sensors_payload)
-            db_ref.child("sound").set(sound_payload)
-            db_ref.child("diagnostics").set(diag_payload)
-            db_ref.child("heartbeat").set({
+        # Each path retries independently — a transient failure on /sound
+        # must not block the heartbeat update, otherwise the iOS "Pi offline"
+        # banner would flap every time one sub-write blinks.
+        _safe_write(lambda: db_ref.child("sensors").update(sensors_payload),       "sensors")
+        _safe_write(lambda: db_ref.child("sound").set(sound_payload),              "sound")
+        _safe_write(lambda: db_ref.child("diagnostics").set(diag_payload),         "diagnostics")
+        _safe_write(lambda: db_ref.child("heartbeat").set({
+            "timestamp": now_iso,
+            "epoch_ms":  int(time.time() * 1000),
+        }), "heartbeat")
+
+        if alert_changed:
+            alert_payload = {
+                "level":     level,
+                "reasons":   reasons,
+                "sleeping":  snap["sleeping"],
                 "timestamp": now_iso,
-                "epoch_ms":  int(time.time() * 1000),
-            })
-
-            if alert_changed:
-                alert_payload = {
-                    "level":     level,
-                    "reasons":   reasons,
-                    "sleeping":  snap["sleeping"],
-                    "timestamp": now_iso,
-                }
-                db_ref.child("alert").set(alert_payload)
+            }
+            if _safe_write(lambda: db_ref.child("alert").set(alert_payload), "alert"):
                 log.info("Alert → %s: %s", level, reasons)
-
-        except Exception as e:
-            log.error("Firebase write error: %s", e)
 
         time.sleep(FIREBASE_UPDATE_INTERVAL)
 

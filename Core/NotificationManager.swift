@@ -1,10 +1,17 @@
 import FirebaseMessaging
 import UserNotifications
 import UIKit
+import Combine
 
 @MainActor
-final class NotificationManager: NSObject {
+final class NotificationManager: NSObject, ObservableObject {
     static let shared = NotificationManager()
+
+    /// Latest authorization status from `UNUserNotificationCenter`. Views
+    /// observe this to surface a banner like "Notifications are off — open
+    /// Settings" when the user has explicitly denied permission, otherwise
+    /// the entire health-reminder feature silently fails for them.
+    @Published private(set) var authorizationStatus: UNAuthorizationStatus = .notDetermined
 
     private override init() { super.init() }
 
@@ -17,11 +24,31 @@ final class NotificationManager: NSObject {
     // Request user permission and register with APNs.
     func requestPermission() async {
         let center = UNUserNotificationCenter.current()
-        guard let granted = try? await center.requestAuthorization(options: [.alert, .sound, .badge]),
-              granted
-        else { return }
+        let granted = (try? await center.requestAuthorization(options: [.alert, .sound, .badge])) ?? false
+        await refreshAuthorizationStatus()
+        guard granted else { return }
         // registerForRemoteNotifications() is synchronous — no await needed.
         UIApplication.shared.registerForRemoteNotifications()
+    }
+
+    /// Re-read the current status from iOS. Call after the user returns from
+    /// Settings.app so the UI banner reflects a freshly-granted permission.
+    func refreshAuthorizationStatus() async {
+        let settings = await UNUserNotificationCenter.current().notificationSettings()
+        authorizationStatus = settings.authorizationStatus
+    }
+
+    /// Convenience flag for views — true only if the user explicitly denied
+    /// notifications. `.notDetermined` and `.authorized` both render normally.
+    var isExplicitlyDenied: Bool {
+        authorizationStatus == .denied
+    }
+
+    /// Deep-link into the app's own page in Settings.app so the user can
+    /// toggle notifications back on without hunting for the row themselves.
+    func openSystemSettings() {
+        guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
+        UIApplication.shared.open(url)
     }
 }
 

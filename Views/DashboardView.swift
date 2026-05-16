@@ -3,6 +3,7 @@ import SwiftUI
 struct DashboardView: View {
     @EnvironmentObject var profileStore: ProfileStore
     @EnvironmentObject var loc: Localization
+    @EnvironmentObject var notifications: NotificationManager
     @ObservedObject private var firebase = FirebaseService.shared
     @ObservedObject private var alertManager = AlertManager.shared
     @ObservedObject private var historyStore = SensorHistoryStore.shared
@@ -249,6 +250,10 @@ struct DashboardView: View {
 
                 if showConnectivityBanner && !firebase.isConnected {
                     offlineBanner
+                }
+
+                if notifications.isExplicitlyDenied {
+                    notificationsDeniedBanner
                 }
 
                 statusHeroCard
@@ -942,6 +947,44 @@ struct DashboardView: View {
         .padding(.vertical, 10)
         .background(Color.orange.opacity(0.10))
         .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+    }
+
+    /// Shown when the user has explicitly denied push notifications.
+    /// Without this banner, vaccine + meal reminders would silently fail
+    /// for them with no in-app indication that the system is misbehaving.
+    /// Tapping deep-links into the app's row in Settings.app.
+    private var notificationsDeniedBanner: some View {
+        Button {
+            notifications.openSystemSettings()
+        } label: {
+            HStack(spacing: 10) {
+                Image(systemName: "bell.slash.fill")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(.red)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Notifications are off")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(.primary)
+                    Text("Vaccine and meal reminders won't be delivered. Tap to open Settings.")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(.secondary)
+                        .lineLimit(2)
+                }
+
+                Spacer(minLength: 0)
+
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundStyle(.tertiary)
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+            .background(Color.red.opacity(0.08))
+            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
     }
 
     private func pill(text: String, textColor: Color, fill: Color) -> some View {

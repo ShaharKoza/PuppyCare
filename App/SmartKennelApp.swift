@@ -5,6 +5,7 @@ import FirebaseCore
 struct PuppyCareApp: App {
     @StateObject private var profileStore = ProfileStore()
     @StateObject private var localization = Localization.shared
+    @StateObject private var notifications = NotificationManager.shared
     @Environment(\.scenePhase) private var scenePhase
 
     init() {
@@ -19,6 +20,7 @@ struct PuppyCareApp: App {
             RootView()
                 .environmentObject(profileStore)
                 .environmentObject(localization)
+                .environmentObject(notifications)
                 // Flip the entire UI to RTL when Hebrew is selected.
                 // SwiftUI mirrors layouts, navigation chevrons, leading/trailing
                 // alignment, swipe gestures, etc. automatically from this single hint.
@@ -38,6 +40,10 @@ struct PuppyCareApp: App {
                         // rules, and the rabies due date would never roll to
                         // the next anniversary.
                         profileStore.recomputeDerivedConfiguration()
+                        // Re-check notifications permission — the user may
+                        // have toggled it from Settings.app while we were
+                        // backgrounded.
+                        Task { await notifications.refreshAuthorizationStatus() }
                     case .background, .inactive:
                         profileStore.saveImmediately()
                     default:
