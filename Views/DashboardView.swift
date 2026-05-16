@@ -272,6 +272,12 @@ struct DashboardView: View {
             .padding(.bottom, 16)
         }
         .scrollContentBackground(.hidden)
+        // Disable horizontal rubber-banding. The Dashboard is vertical-only;
+        // the default iOS ScrollView still allows a small horizontal bounce
+        // when the user swipes sideways, which feels like the page "moves".
+        // .basedOnSize keeps the vertical bounce we DO want (content is taller
+        // than the screen) and suppresses the horizontal one we never want.
+        .scrollBounceBehavior(.basedOnSize)
         .background(AppTheme.pageBackground.ignoresSafeArea())
         .navigationBarBackButtonHidden(true)
         .toolbar(.hidden, for: .navigationBar)
