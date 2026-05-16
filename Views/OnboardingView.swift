@@ -3,6 +3,7 @@ import PhotosUI
 
 struct OnboardingView: View {
     @EnvironmentObject var profileStore: ProfileStore
+    @EnvironmentObject var loc: Localization
 
     @State private var selectedPhotoItem: PhotosPickerItem?
     @State private var breedSearchText: String = ""
@@ -65,7 +66,7 @@ struct OnboardingView: View {
     private var headerSection: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack(spacing: 10) {
-                Text("Puppy Setup")
+                Text(loc.t("Puppy Setup"))
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(AppTheme.accentBrown)
                     .padding(.horizontal, 10)
@@ -90,7 +91,7 @@ struct OnboardingView: View {
                         .font(.system(size: 30, weight: .bold))
                         .lineLimit(1)
                         .minimumScaleFactor(0.9)
-                    Text("Set up your puppy's profile to get started.")
+                    Text(loc.t("Set up your puppy's profile to get started."))
                         .font(.system(size: 15, weight: .medium))
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
@@ -108,7 +109,7 @@ struct OnboardingView: View {
     private var progressSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("Setup progress")
+                Text(loc.t("Setup progress"))
                     .font(.system(size: 16, weight: .semibold))
                 Spacer()
                 Text("\(completedRequiredFields)/\(totalRequiredFields) complete")
@@ -242,9 +243,9 @@ struct OnboardingView: View {
 
             Toggle(isOn: $profileStore.profile.isInKennel) {
                 VStack(alignment: .leading, spacing: 3) {
-                    Text("Dog Currently In Kennel")
+                    Text(loc.t("Dog Currently In Kennel"))
                         .font(.system(size: 15, weight: .semibold))
-                    Text("You can change this later from the main app.")
+                    Text(loc.t("You can change this later from the main app."))
                         .font(AppTheme.captionFont)
                         .foregroundStyle(.secondary)
                 }
@@ -262,7 +263,7 @@ struct OnboardingView: View {
                     if canContinue {
                         Image(systemName: "checkmark.circle.fill")
                     }
-                    Text("Continue")
+                    Text(loc.t("Continue"))
                     Image(systemName: "arrow.right")
                     Spacer()
                 }

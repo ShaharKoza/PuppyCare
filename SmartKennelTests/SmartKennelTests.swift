@@ -279,6 +279,65 @@ struct FirebaseParserTests {
 // key, so screens we haven't touched still render readable text.
 // ─────────────────────────────────────────────────────────────────────────────
 
+// ─────────────────────────────────────────────────────────────────────────────
+// MARK: - FoodAssistantService: fuzzy + Hebrew matching
+//
+// Regression for the P2 fuzzy-match refactor. Previous exact-substring code
+// returned .unknown for typos like "Bananaa" or Hebrew variants like
+// "תפוחים" — users hit it constantly.
+// ─────────────────────────────────────────────────────────────────────────────
+
+struct FoodAssistantTests {
+
+    @Test("Exact English keyword returns the right result")
+    func exactMatch() async {
+        let r = await FoodAssistantService.shared.query("Chocolate")
+        #expect(r.status == .danger)
+        #expect(r.headline == "Chocolate")
+    }
+
+    @Test("Typo within Levenshtein threshold still matches (Bananaa)")
+    func typoMatch() async {
+        let r = await FoodAssistantService.shared.query("Bananaa")
+        #expect(r.status == .safe)
+        #expect(r.headline == "Banana")
+    }
+
+    @Test("Hebrew exact keyword matches (שוקולד)")
+    func hebrewExact() async {
+        let r = await FoodAssistantService.shared.query("שוקולד")
+        #expect(r.status == .danger)
+    }
+
+    @Test("Hebrew plural near-match (תפוחים → תפוח via fuzzy)")
+    func hebrewPluralFuzzy() async {
+        let r = await FoodAssistantService.shared.query("תפוחים")
+        #expect(r.status == .safe)
+        #expect(r.headline == "Apple")
+    }
+
+    @Test("Genuinely unknown food returns .unknown without crashing")
+    func unknownFood() async {
+        let r = await FoodAssistantService.shared.query("zzzzqxqxq")
+        #expect(r.status == .unknown)
+    }
+
+    @Test("Empty input returns .unknown, not a wrong match")
+    func emptyInput() async {
+        let r = await FoodAssistantService.shared.query("   ")
+        #expect(r.status == .unknown)
+    }
+
+    @Test("Levenshtein primitive: known reference values")
+    func levenshteinReference() {
+        #expect(FoodAssistantService.levenshtein("kitten", "sitting") == 3)
+        #expect(FoodAssistantService.levenshtein("", "abc") == 3)
+        #expect(FoodAssistantService.levenshtein("abc", "") == 3)
+        #expect(FoodAssistantService.levenshtein("same", "same") == 0)
+        #expect(FoodAssistantService.levenshtein("ביצה", "ביצים") == 2)
+    }
+}
+
 @MainActor
 struct LocalizationTests {
 

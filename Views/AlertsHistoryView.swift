@@ -2,6 +2,7 @@ import SwiftUI
 
 struct AlertsHistoryView: View {
     @ObservedObject var alertManager: AlertManager
+    @EnvironmentObject var loc: Localization
     @Environment(\.dismiss) private var dismiss
 
     @State private var selectedFilter: AlertType? = nil
@@ -25,11 +26,11 @@ struct AlertsHistoryView: View {
             }
             .scrollContentBackground(.hidden)
             .background(AppTheme.pageBackground.ignoresSafeArea())
-            .navigationTitle("Alerts History")
+            .navigationTitle(loc.t("Alerts History"))
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Done") { dismiss() }
+                    Button(loc.t("Done")) { dismiss() }
                         .font(.system(size: 17, weight: .semibold))
                         .foregroundStyle(AppTheme.accentBrown)
                 }
@@ -43,11 +44,11 @@ struct AlertsHistoryView: View {
                     }
                 }
             }
-            .confirmationDialog("Clear all alerts?", isPresented: $showClearConfirm, titleVisibility: .visible) {
-                Button("Clear All", role: .destructive) { alertManager.clearAll() }
-                Button("Cancel", role: .cancel) {}
+            .confirmationDialog(loc.t("Clear all alerts?"), isPresented: $showClearConfirm, titleVisibility: .visible) {
+                Button(loc.t("Clear All"), role: .destructive) { alertManager.clearAll() }
+                Button(loc.t("Cancel"), role: .cancel) {}
             } message: {
-                Text("This cannot be undone.")
+                Text(loc.t("This cannot be undone."))
             }
             .onAppear { alertManager.markAllRead() }
         }
@@ -176,7 +177,7 @@ struct AlertsHistoryView: View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
                 FilterChip(
-                    label: "All",
+                    label: loc.t("All"),
                     icon: "list.bullet",
                     color: .gray,
                     isSelected: selectedFilter == nil
@@ -186,7 +187,7 @@ struct AlertsHistoryView: View {
 
                 ForEach(AlertType.allCases, id: \.self) { type in
                     FilterChip(
-                        label: type.displayName,
+                        label: loc.t(type.displayName),
                         icon: type.icon,
                         color: type.tint,
                         isSelected: selectedFilter == type
@@ -236,8 +237,8 @@ struct AlertsHistoryView: View {
     }()
 
     private func sectionKey(for date: Date) -> String {
-        if calendar.isDateInToday(date)     { return "Today" }
-        if calendar.isDateInYesterday(date) { return "Yesterday" }
+        if calendar.isDateInToday(date)     { return loc.t("Today") }
+        if calendar.isDateInYesterday(date) { return loc.t("Yesterday") }
         return Self.sectionDateFormatter.string(from: date)
     }
 
@@ -295,12 +296,12 @@ struct AlertsHistoryView: View {
             Image(systemName: "checkmark.circle.fill")
                 .font(.system(size: 44))
                 .foregroundStyle(.green)
-            Text("No alerts")
+            Text(loc.t("No alerts yet"))
                 .font(AppTheme.bodyTitleFont)
             Text(
                 selectedFilter == nil
-                    ? "Everything looks good — no alerts have been logged yet."
-                    : "No \(selectedFilter!.displayName.lowercased()) alerts recorded."
+                    ? loc.t("Everything looks good — no alerts have been logged yet.")
+                    : "No \(loc.t(selectedFilter!.displayName).lowercased()) " + loc.t("alerts recorded.")
             )
             .font(AppTheme.bodyFont)
             .foregroundStyle(.secondary)

@@ -171,5 +171,113 @@ final class Localization: ObservableObject {
         // ── About / version ─────────────────────────────────────────────
         "PuppyCare":         "PuppyCare",
         "Smart Kennel Monitoring": "ניטור חכם לכלוב",
+
+        // ── Onboarding ──────────────────────────────────────────────────
+        "Welcome to PuppyCare":  "ברוכים הבאים ל-PuppyCare",
+        "Let's set up your dog's profile":  "בואו נגדיר את פרופיל הכלב שלכם",
+        "Puppy Setup":           "הגדרת הגור",
+        "Set up your puppy's profile to get started.":
+            "הגדירו את פרופיל הגור כדי להתחיל.",
+        "Setup progress":        "התקדמות הגדרה",
+        "Dog Currently In Kennel": "הכלב כרגע בכלוב",
+        "You can change this later from the main app.":
+            "תוכלו לשנות זאת מאוחר יותר מהאפליקציה הראשית.",
+        "Mixed":                 "מעורב",
+        "Dog's name":            "שם הכלב",
+        "Name":                  "שם",
+        "Breed":                 "גזע",
+        "Sex":                   "מין",
+        "Male":                  "זכר",
+        "Female":                "נקבה",
+        "Age (months)":          "גיל (חודשים)",
+        "Weight (kg)":           "משקל (ק״ג)",
+        "Date of birth":         "תאריך לידה",
+        "Add photo":             "הוסף תמונה",
+        "Change photo":          "החלף תמונה",
+        "Get started":           "התחל",
+        "Complete the required fields to continue": "השלם את השדות החסרים כדי להמשיך",
+        "Skip for now":          "דלג כרגע",
+
+        // ── Profile setup wizard ────────────────────────────────────────
+        "Dog Profile Setup":     "הגדרת פרופיל הכלב",
+        "Profile Type":          "סוג פרופיל",
+        "Size":                  "גודל",
+        "Head Type":             "צורת ראש",
+        "Coat":                  "פרווה",
+        "Special Conditions":    "מצבים מיוחדים",
+        "Lifestyle":             "אורח חיים",
+        "Apply Settings":        "החל הגדרות",
+        "Manual Override":       "ביטול ברירות מחדל",
+
+        // ── Lifestyle options ──────────────────────────────────────────
+        "Primarily indoor":          "בעיקר בבית",
+        "Has yard / outdoor access": "יש חצר / גישה לחוץ",
+        "Regular boarding":          "פנסיון קבוע",
+        "Group training or classes": "אילוף קבוצתי / שיעורים",
+        "Frequent dog-to-dog contact": "מגע תכוף עם כלבים אחרים",
+
+        // ── Alerts history ─────────────────────────────────────────────
+        "Alerts":                "התראות",
+        "Alerts History":        "היסטוריית התראות",
+        "Recent Activity":       "פעילות אחרונה",
+        "Today":                 "היום",
+        "Yesterday":             "אתמול",
+        "No alerts yet":         "אין עדיין התראות",
+        "Filters":               "סינון",
+        "Info":                  "מידע",
+        "Mark all as read":      "סמן הכל כנקרא",
+        "Clear all alerts?":     "לנקות את כל ההתראות?",
+        "This cannot be undone.":"לא ניתן לשחזר פעולה זו.",
+        "Everything looks good — no alerts have been logged yet.":
+            "הכל נראה תקין — עדיין לא נרשמו התראות.",
+        "alerts recorded.":      "התראות נרשמו.",
+
+        // ── Vaccine card ───────────────────────────────────────────────
+        "Vaccine reminders":     "תזכורות חיסונים",
+        "Check due":             "בדוק תפוגה",
+        "Annual Rabies Vaccine": "חיסון כלבת שנתי",
+        "First Rabies Vaccine — Upcoming": "חיסון כלבת ראשון — מתקרב",
+        "Reminder only — confirm the exact schedule with your veterinarian.":
+            "תזכורת בלבד — אמתו את לוח הזמנים המדויק עם הוטרינר.",
+        "Due today":             "להיום",
+        "Due tomorrow":          "למחר",
+
+        // ── Routine ────────────────────────────────────────────────────
+        "Daily Routine":         "שגרה יומית",
+        "Add meal":              "הוסף ארוחה",
+        "Add walk":              "הוסף הליכה",
+        "Add play":              "הוסף משחק",
+        "Meals":                 "ארוחות",
+        "Walks":                 "הליכות",
+        "Play":                  "משחק",
+        "Time":                  "שעה",
+        "Grams":                 "גרמים",
+        "Duration":              "משך",
+        "Edit":                  "ערוך",
+
+        // ── Food Assistant ─────────────────────────────────────────────
+        "Food Assistant":        "עוזר תזונה",
+        "Ask about any food":    "שאל על כל מאכל",
+        "Safe":                  "בטוח",
+        "Caution":                "זהירות",
+        "Dangerous":             "מסוכן",
+        "Unknown":               "לא ידוע",
+        "Ask":                   "שאל",
+        "I'm not sure about that food.": "אני לא בטוח לגבי המאכל הזה.",
+
+        // ── Connectivity / offline banners ─────────────────────────────
+        "Sensor data unavailable — no internet connection":
+            "נתוני חיישנים אינם זמינים — אין חיבור לאינטרנט",
+        "Notifications are off": "ההתראות כבויות",
+        "Vaccine and meal reminders won't be delivered. Tap to open Settings.":
+            "תזכורות חיסונים וארוחות לא יישלחו. הקש לפתיחת הגדרות.",
+
+        // ── Sensor chart ───────────────────────────────────────────────
+        "Last 24 Hours":         "24 השעות האחרונות",
+        "Current":               "נוכחי",
+        "Min 24h":               "מינ׳ 24 ש׳",
+        "Max 24h":               "מקס׳ 24 ש׳",
+        "No data yet":           "אין עדיין נתונים",
+        "Building the chart…":   "בונה את הגרף…",
     ]
 }
