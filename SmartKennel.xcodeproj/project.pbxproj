@@ -10,6 +10,7 @@
 		7E2DE13D2F79762D00DD9497 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 7E2DE13C2F79762D00DD9497 /* FirebaseCore */; };
 		7E2DE13F2F79762D00DD9497 /* FirebaseDatabase in Frameworks */ = {isa = PBXBuildFile; productRef = 7E2DE13E2F79762D00DD9497 /* FirebaseDatabase */; };
 		7E608F2D2F801ED0000D0B81 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = 7E608F2C2F801ED0000D0B81 /* FirebaseMessaging */; };
+		7E9A0A012F8A6E6B0099AABB /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 7E9A0A002F8A6E6B0099AABB /* FirebaseAuth */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -81,6 +82,7 @@
 				7E608F2D2F801ED0000D0B81 /* FirebaseMessaging in Frameworks */,
 				7E2DE13F2F79762D00DD9497 /* FirebaseDatabase in Frameworks */,
 				7E2DE13D2F79762D00DD9497 /* FirebaseCore in Frameworks */,
+				7E9A0A012F8A6E6B0099AABB /* FirebaseAuth in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -160,6 +162,7 @@
 				7E2DE13C2F79762D00DD9497 /* FirebaseCore */,
 				7E2DE13E2F79762D00DD9497 /* FirebaseDatabase */,
 				7E608F2C2F801ED0000D0B81 /* FirebaseMessaging */,
+				7E9A0A002F8A6E6B0099AABB /* FirebaseAuth */,
 			);
 			productName = SmartKennel;
 			productReference = 7E2DE1032F7974C300DD9497 /* SmartKennel.app */;
@@ -656,6 +659,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 7E2DE13B2F79762D00DD9497 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseMessaging;
+		};
+		7E9A0A002F8A6E6B0099AABB /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7E2DE13B2F79762D00DD9497 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

@@ -1,5 +1,6 @@
 import SwiftUI
 import FirebaseCore
+import FirebaseAuth
 
 @main
 struct PuppyCareApp: App {
@@ -11,6 +12,18 @@ struct PuppyCareApp: App {
     init() {
         if FirebaseApp.app() == nil {
             FirebaseApp.configure()
+        }
+        // Sign in anonymously so the RTDB security rules (auth != null) accept
+        // every write the iOS client makes — primarily the FCM token. The
+        // server-side Cloud Function uses the Admin SDK and bypasses rules,
+        // so it's unaffected. Anonymous Auth is free, requires no UI, and
+        // creates a stable per-install identity that survives app restarts.
+        if Auth.auth().currentUser == nil {
+            Auth.auth().signInAnonymously { _, error in
+                if let error {
+                    print("[Auth] Anonymous sign-in failed: \(error.localizedDescription)")
+                }
+            }
         }
         NotificationManager.shared.configure()
     }
