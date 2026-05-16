@@ -520,6 +520,9 @@ struct DashboardView: View {
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("Critical alert — activity and noise in kennel happening now")
+                    .accessibilityAddTraits([.isButton, .isHeader])
                 } else if !cleanedAlertReasons.isEmpty {
                     // Live Pi-side reasons take precedence.
                     ForEach(cleanedAlertReasons.prefix(2), id: \.self) { reason in
@@ -907,6 +910,12 @@ struct DashboardView: View {
                 activeChart = chartType
             }
         }
+        // VoiceOver: announce the tile as a single combined element so users
+        // hear "Temperature, 22.5°C" instead of three separate focuses.
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(title) \(value)")
+        .accessibilityHint(chartType != nil ? "Double-tap to see the 24-hour chart" : "")
+        .accessibilityAddTraits(chartType != nil ? .isButton : [])
     }
 
     private func summaryTile(title: String, value: String) -> some View {

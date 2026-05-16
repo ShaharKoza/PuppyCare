@@ -1,0 +1,85 @@
+{
+  "//": "Firebase Realtime Database security rules for PuppyCare.",
+  "//1": "Deploy:  firebase deploy --only database  — after `firebase login` and `firebase use <project-id>`.",
+  "//2": "These rules assume the dog owner is the only writer and the Pi unit writes via a service-account.",
+  "//3": "The Pi uses the Admin SDK which bypasses rules; the iOS app is the only client constrained here.",
+  "//4": "If you later add multi-user support, swap '.read'/'.write' true under auth gates with $uid scoping.",
+
+  "rules": {
+    ".read":  "auth != null",
+    ".write": "auth != null",
+
+    "kennel": {
+
+      "sensors": {
+        ".read":  true,
+        ".write": "auth != null",
+        ".validate": "newData.hasChildren(['motion','sleeping','timestamp'])",
+        "temperature":   { ".validate": "newData.isNumber() && newData.val() >= -40 && newData.val() <= 80" },
+        "humidity":      { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100" },
+        "motion":        { ".validate": "newData.isBoolean()" },
+        "sleeping":      { ".validate": "newData.isBoolean()" },
+        "light":         { ".validate": "newData.isString() && (newData.val() == 'light' || newData.val() == 'dark')" },
+        "motion_streak": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 999" },
+        "sound_streak":  { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 999" },
+        "timestamp":     { ".validate": "newData.isString()" },
+        "$other":        { ".validate": false }
+      },
+
+      "sound": {
+        ".read":  true,
+        ".write": "auth != null",
+        "sound_active":    { ".validate": "newData.isBoolean()" },
+        "bark_detected":   { ".validate": "newData.isBoolean()" },
+        "bark_count_5s":   { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 999" },
+        "sustained_sound": { ".validate": "newData.isBoolean()" },
+        "timestamp":       { ".validate": "newData.isString()" },
+        "$other":          { ".validate": false }
+      },
+
+      "alert": {
+        ".read":  true,
+        ".write": "auth != null",
+        ".validate": "newData.hasChild('level')",
+        "level": {
+          ".validate": "newData.isString() && (newData.val() == 'normal' || newData.val() == 'warning' || newData.val() == 'critical')"
+        },
+        "reasons":   { ".validate": "newData.exists()" },
+        "sleeping":  { ".validate": "newData.isBoolean()" },
+        "puppy_mode":{ ".validate": "newData.isBoolean()" },
+        "puppy_age": { ".validate": "newData.isString()" },
+        "timestamp": { ".validate": "newData.isString()" },
+        "$other":    { ".validate": false }
+      },
+
+      "camera": {
+        ".read":  true,
+        ".write": "auth != null"
+      },
+
+      "heartbeat": {
+        ".read":  true,
+        ".write": "auth != null",
+        "timestamp": { ".validate": "newData.isString()" },
+        "epoch_ms":  { ".validate": "newData.isNumber()" },
+        "$other":    { ".validate": false }
+      },
+
+      "diagnostics": {
+        ".read":  true,
+        ".write": "auth != null"
+      },
+
+      "config": {
+        ".read":  true,
+        ".write": "auth != null"
+      },
+
+      "fcm_token": {
+        ".read":  true,
+        ".write": "auth != null",
+        ".validate": "newData.isString() && newData.val().length > 10"
+      }
+    }
+  }
+}

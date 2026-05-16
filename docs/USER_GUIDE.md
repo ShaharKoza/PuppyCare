@@ -183,7 +183,7 @@ At the top of the Feeding tab, a summary card shows:
 
 ### Food Assistant
 
-Tap the **"Food Assistant"** button at the top of the Feeding tab to open the AI food safety tool. See [Section 7](#7-food-assistant) for details.
+Tap the **"Food Assistant"** button at the top of the Feeding tab to open the food safety tool. See [Section 7](#7-food-assistant) for details.
 
 ---
 

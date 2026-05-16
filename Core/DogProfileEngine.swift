@@ -215,7 +215,7 @@ enum DogProfileEngine {
             //   soundAlone = false because respiratory sounds ≠ bark threshold events.
             // Inactivity: >60 min motionless at rest = hypoxic risk (Liu et al. 2016).
             //   Using 45 min as conservative buffer below the 60-min clinical threshold.
-            warnHigh = 24; criticalHigh = 26   // research: alert 24 °C, emergency 26 °C
+            warnHigh = 24; criticalHigh = 26   // research: warning at 24 °C, critical at 26 °C
             warnLow  = 18; criticalLow  = 14   // research: strict lower bound 18 °C
             soundLevel  = .high
             soundAlone  = false   // respiratory sounds, not bark count

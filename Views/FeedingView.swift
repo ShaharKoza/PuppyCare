@@ -180,7 +180,7 @@ struct DailyRoutineView: View {
         .clipShape(Capsule())
     }
 
-    // MARK: - AI Insight
+    // MARK: - Daily insight
 
     private var aiInsightCard: some View {
         VStack(alignment: .leading, spacing: 10) {

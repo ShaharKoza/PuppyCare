@@ -73,7 +73,7 @@ The system uses **Firebase Realtime Database** as the communication backbone bet
 ### Feeding Management
 - Daily schedule with meals, walks, and play sessions
 - Per-meal gram tracking and calorie calculation
-- AI Food Assistant: type any food name and get a safety assessment (safe / caution / dangerous), explanation, and tips
+- Food Assistant: type any food name and get a safety assessment (safe / caution / dangerous), explanation, and tips
 - Next meal/event badge on each routine row
 
 ### Dog Profile
@@ -268,7 +268,7 @@ SmartKennel/
 │   ├── FirebaseService.swift     # Realtime Database listeners for all sensor paths
 │   ├── AlertManager.swift        # Alert records, threshold checks, analytics engine
 │   ├── ProfileStore.swift        # Dog profile persistence, threshold sync, reminder scheduling
-│   ├── FoodAssistantService.swift# Rule-based food safety lookup + pluggable AI protocol
+│   ├── FoodAssistantService.swift# Rule-based food safety lookup + pluggable backend protocol
 │   ├── NotificationManager.swift # APNs permission, FCM token registration
 │   ├── ReminderManager.swift     # Local UNUserNotification scheduling for routine items
 │   ├── SensorHistoryStore.swift  # In-memory ring buffer for sensor chart data
@@ -279,7 +279,7 @@ SmartKennel/
 │   ├── DashboardView.swift       # Live sensor tiles, camera card, kennel timer
 │   ├── AlertsHistoryView.swift   # Alert log, analytics, bark chart, filter chips
 │   ├── FeedingView.swift         # Routine schedule, meal management, calorie calc
-│   ├── FoodAssistantView.swift   # AI food safety assistant chat interface
+│   ├── FoodAssistantView.swift   # Food safety assistant chat interface
 │   ├── ProfileView.swift         # Dog profile editor, vaccine reminders, thresholds
 │   ├── OnboardingView.swift      # First-launch setup flow
 │   ├── CameraCardView.swift      # Kennel camera snapshot display
@@ -310,7 +310,7 @@ SmartKennel/
 
 - **Single dog, single kennel:** The app is designed for one dog profile and one kennel device. Multi-dog support would require namespaced Firebase paths.
 - **Single device:** The FCM token is stored as a single value; only the last device to register receives push notifications.
-- **Local food assistant:** The AI food assistant uses a local rule-based engine. Plugging in a real LLM requires implementing the `FoodAssistantQuerying` protocol.
+- **Local food assistant:** The food assistant uses a local rule-based engine. Plugging in a remote inference service requires implementing the `FoodAssistantQuerying` protocol.
 - **No offline queue:** If the Pi is offline, the iOS app shows the last known values. There is no local caching of historical sensor data beyond the alert records.
 - **Israel-specific vaccine reminders:** The vaccine reminder logic is tuned for Israel's veterinary requirements.
 
@@ -332,8 +332,8 @@ SmartKennel/
 
 - [ ] Multi-dog / multi-kennel support with namespaced Firebase paths
 - [ ] Historical sensor graphs (24h, 7d, 30d) backed by Firebase or InfluxDB
-- [ ] AI-powered feeding recommendations using weight, breed, and activity data
-- [ ] Integration with a real LLM backend for the Food Assistant
+- [ ] Personalised feeding recommendations using weight, breed, and activity data
+- [ ] Integration with a remote inference service for the Food Assistant
 - [ ] Apple Watch complication for kennel status at a glance
 - [ ] Widget extension for the Lock Screen / Home Screen
 - [ ] Export alert history as CSV or PDF report

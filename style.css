@@ -585,7 +585,7 @@ h3 {
 .sc-dashboard { background: linear-gradient(140deg, #2D1B0E 0%, #6B3A1A 55%, #B07E54 100%); }
 .sc-alerts    { background: linear-gradient(140deg, #2D0E12 0%, #7A1A28 55%, #C05060 100%); }
 .sc-feeding   { background: linear-gradient(140deg, #0E2D14 0%, #1A6B30 55%, #54B07A 100%); }
-.sc-ai        { background: linear-gradient(140deg, #0F1A2D 0%, #1A306B 55%, #5472B0 100%); }
+.sc-assistant { background: linear-gradient(140deg, #0F1A2D 0%, #1A306B 55%, #5472B0 100%); }
 .sc-profile   { background: linear-gradient(140deg, #22140E 0%, #6B4A1A 55%, #B08254 100%); }
 .sc-camera    { background: linear-gradient(140deg, #1A0F2D 0%, #3A1A6B 55%, #7054B0 100%); }
 

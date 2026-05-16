@@ -25,7 +25,7 @@ Pods/
 # Thumbnails
 ._*
 
-# Claude Code session files
+# Editor / session caches
 .claude/
 
 # Environment / secrets
