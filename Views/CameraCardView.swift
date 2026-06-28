@@ -6,12 +6,11 @@ struct CameraCardView: View {
 
     @State private var showFullScreen = false
 
-    private static let timeFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.timeStyle = .short
-        formatter.dateStyle = .none
-        return formatter
-    }()
+    /// Bundled fallback shown whenever there is no live camera frame (no URL,
+    /// still loading, or the load failed). The moment the Raspberry Pi camera
+    /// publishes a working URL again, AsyncImage's `.success` branch takes
+    /// over automatically — no code change needed to switch back to live.
+    private let placeholderImageName = "KennelPlaceholder"
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -43,19 +42,19 @@ struct CameraCardView: View {
 
             Spacer()
 
-            if imageURL != nil {
-                Button {
-                    showFullScreen = true
-                } label: {
-                    Image(systemName: "arrow.up.left.and.arrow.down.right")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(AppTheme.accentBrown)
-                        .frame(width: 30, height: 30)
-                        .background(AppTheme.accentBrown.opacity(0.10))
-                        .clipShape(Circle())
-                }
-                .buttonStyle(.plain)
+            // Always available — there's always something to expand (live frame
+            // or the bundled placeholder).
+            Button {
+                showFullScreen = true
+            } label: {
+                Image(systemName: "arrow.up.left.and.arrow.down.right")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(AppTheme.accentBrown)
+                    .frame(width: 30, height: 30)
+                    .background(AppTheme.accentBrown.opacity(0.10))
+                    .clipShape(Circle())
             }
+            .buttonStyle(.plain)
         }
     }
 
@@ -76,18 +75,6 @@ struct CameraCardView: View {
         if let url = imageURL {
             AsyncImage(url: url) { phase in
                 switch phase {
-                case .empty:
-                    placeholder {
-                        VStack(spacing: 8) {
-                            ProgressView()
-                                .tint(AppTheme.accentBrown)
-
-                            Text("Loading latest snapshot…")
-                                .font(AppTheme.captionFont)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-
                 case .success(let image):
                     ZStack(alignment: .bottomLeading) {
                         image
@@ -101,11 +88,6 @@ struct CameraCardView: View {
                                 showFullScreen = true
                             }
 
-                        // Show the snapshot's real timestamp when we have one.
-                        // If updatedAt is nil — we got the image but lost the
-                        // timestamp metadata — show "Live stream" rather than
-                        // the current time, which would falsely claim the
-                        // image was just captured.
                         Text(updatedAt.map { "Last snapshot: \(relativeTime(from: $0))" } ?? "Live stream")
                             .font(.system(size: 11, weight: .medium))
                             .foregroundStyle(.white)
@@ -116,61 +98,30 @@ struct CameraCardView: View {
                             .padding(10)
                     }
 
-                case .failure:
-                    placeholder {
-                        VStack(spacing: 10) {
-                            Image(systemName: "wifi.slash")
-                                .font(.system(size: 22))
-                                .foregroundStyle(.secondary)
-
-                            Text("Can’t load the latest snapshot")
-                                .font(AppTheme.bodyFont)
-                                .foregroundStyle(.secondary)
-
-                            Text("Check the iPhone and Raspberry Pi are on the same Wi-Fi.")
-                                .font(.system(size: 12, weight: .regular))
-                                .foregroundStyle(.tertiary)
-                                .multilineTextAlignment(.center)
-                        }
-                        .padding(.horizontal, 12)
-                    }
-
-                @unknown default:
-                    placeholder {
-                        ProgressView()
-                            .tint(AppTheme.accentBrown)
-                    }
+                default:
+                    // .empty (loading) and .failure both fall back to the
+                    // bundled snapshot so the card never shows a spinner or an
+                    // error — the live frame replaces it the instant it loads.
+                    staticSnapshot
                 }
             }
         } else {
-            placeholder {
-                VStack(spacing: 10) {
-                    Image(systemName: "camera.slash")
-                        .font(.system(size: 24))
-                        .foregroundStyle(AppTheme.accentBrown.opacity(0.30))
-
-                    Text("Waiting for first snapshot")
-                        .font(AppTheme.bodyFont)
-                        .foregroundStyle(.secondary)
-
-                    Text("The Raspberry Pi has not published a camera image yet.")
-                        .font(.system(size: 12, weight: .regular))
-                        .foregroundStyle(.tertiary)
-                        .multilineTextAlignment(.center)
-                }
-                .padding(.horizontal, 12)
-            }
+            staticSnapshot
         }
     }
 
-    private func placeholder<Content: View>(@ViewBuilder content: () -> Content) -> some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(AppTheme.warmTile)
-                .frame(height: 156)
-
-            content()
-        }
+    /// The bundled placeholder, styled exactly like a live frame.
+    private var staticSnapshot: some View {
+        Image(placeholderImageName)
+            .resizable()
+            .scaledToFill()
+            .frame(maxWidth: .infinity)
+            .frame(height: 156)
+            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .onTapGesture {
+                showFullScreen = true
+            }
     }
 
     // MARK: - Full screen
@@ -189,20 +140,20 @@ struct CameraCardView: View {
                                 .scaledToFit()
                                 .ignoresSafeArea()
 
-                        case .empty:
-                            ProgressView()
-                                .tint(.white)
-
                         default:
-                            Image(systemName: "wifi.slash")
-                                .font(.system(size: 36))
-                                .foregroundStyle(.white.opacity(0.5))
+                            // Loading or failed → show the bundled snapshot
+                            // full-screen, consistent with the card.
+                            Image(placeholderImageName)
+                                .resizable()
+                                .scaledToFit()
+                                .ignoresSafeArea()
                         }
                     }
                 } else {
-                    Image(systemName: "camera.slash")
-                        .font(.system(size: 36))
-                        .foregroundStyle(.white.opacity(0.5))
+                    Image(placeholderImageName)
+                        .resizable()
+                        .scaledToFit()
+                        .ignoresSafeArea()
                 }
             }
             .toolbar {
