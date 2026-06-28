@@ -75,11 +75,6 @@ final class FirebaseService: ObservableObject {
         listenToHeartbeat()
     }
 
-    func stopListening() {
-        removeAllHandles()
-        isConnected = false
-    }
-
     private func removeAllHandles() {
         if let h = connectionHandle {
             Database.database().reference(withPath: ".info/connected").removeObserver(withHandle: h)

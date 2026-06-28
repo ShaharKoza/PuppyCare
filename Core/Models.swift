@@ -7,8 +7,6 @@ enum PuppyAgeProfile: String, Codable, CaseIterable {
     case age1To2Months = "1–2 months"
     case age2To4Months = "2–4 months"
     case age4PlusMonths = "4+ months"
-
-    var shortLabel: String { rawValue }
 }
 
 // MARK: - Daily Routine Schedule

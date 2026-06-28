@@ -419,15 +419,4 @@ enum DogProfileEngine {
         if days <= 30 { return .withinMonth }
         return .upcoming
     }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // MARK: - Rabies reminder dates (30/14/7 day advance warnings)
-    // ─────────────────────────────────────────────────────────────────────────
-
-    static func rabiesReminderDates(dueDate: Date) -> [Date] {
-        let cal = Calendar.current
-        return [30, 14, 7].compactMap { days in
-            cal.date(byAdding: .day, value: -days, to: dueDate)
-        }
-    }
 }

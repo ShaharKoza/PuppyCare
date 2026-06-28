@@ -972,16 +972,7 @@ h3 {
 .alert-warning .alert-level-label { color: #9A6D00; }
 .alert-warning .alert-example { background: #FFF4CC; color: #9A6D00; }
 
-/* Stress */
-.alert-stress {
-  background: #FFF5EE;
-  border-color: rgba(234, 109, 23, 0.25);
-}
-.alert-stress .alert-indicator { background: #EA6D17; }
-.alert-stress .alert-level-label { color: #C05A00; }
-.alert-stress .alert-example { background: #FFE8D6; color: #C05A00; }
-
-/* Emergency */
+/* Critical */
 .alert-emergency {
   background: #FFF0F0;
   border-color: rgba(192, 57, 43, 0.22);

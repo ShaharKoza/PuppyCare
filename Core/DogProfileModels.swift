@@ -206,13 +206,6 @@ enum RegionRisk: String, Codable, CaseIterable, Identifiable {
         case .golanOrWater:   return "Golan / high water-exposure area"
         }
     }
-
-    var leptospirosisRisk: Bool {
-        switch self {
-        case .centralOrSouth: return false
-        case .northernIsrael, .golanOrWater: return true
-        }
-    }
 }
 
 enum RiskLevel: String, Codable {
