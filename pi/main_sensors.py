@@ -730,17 +730,32 @@ def camera_trigger_loop():
 
 # ─────────────────────────── main ─────────────────────────────────────────────
 
+def resilient(loop_fn):
+    """Wrap a sensor-loop target so an unhandled exception never permanently
+    kills the thread. On a 24/7 unit, a single transient error (GPIO glitch,
+    lock contention, memory pressure) inside any loop would otherwise leave
+    that sensor frozen until a full reboot, with no trace. This catches it,
+    logs it, and restarts the loop after a short pause."""
+    def runner():
+        while True:
+            try:
+                loop_fn()
+            except Exception as e:                       # noqa: BLE001 — deliberate
+                log.error("%s crashed: %s — restarting in 2 s", loop_fn.__name__, e)
+                time.sleep(2)
+    return runner
+
 def main():
     log.info("PuppyCare sensor station starting — Production Edition")
 
     threads = [
-        threading.Thread(target=dht_loop,             name="dht",      daemon=True),
-        threading.Thread(target=sound_loop,           name="sound",    daemon=True),
-        threading.Thread(target=pir_loop,             name="pir",      daemon=True),
-        threading.Thread(target=light_loop,           name="light",    daemon=True),
-        threading.Thread(target=sleep_loop,           name="sleep",    daemon=True),
-        threading.Thread(target=firebase_writer_loop, name="firebase", daemon=True),
-        threading.Thread(target=camera_trigger_loop,  name="camera",   daemon=True),
+        threading.Thread(target=resilient(dht_loop),             name="dht",      daemon=True),
+        threading.Thread(target=resilient(sound_loop),           name="sound",    daemon=True),
+        threading.Thread(target=resilient(pir_loop),             name="pir",      daemon=True),
+        threading.Thread(target=resilient(light_loop),           name="light",    daemon=True),
+        threading.Thread(target=resilient(sleep_loop),           name="sleep",    daemon=True),
+        threading.Thread(target=resilient(firebase_writer_loop), name="firebase", daemon=True),
+        threading.Thread(target=resilient(camera_trigger_loop),  name="camera",   daemon=True),
     ]
 
     for t in threads:

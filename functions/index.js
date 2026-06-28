@@ -84,26 +84,40 @@ exports.sendAlertNotification = onValueWritten(
       ? cleanReasons.join(" · ")
       : `Alert level: ${after.level}`;
 
-    await getMessaging().send({
-      token,
-      notification: {
-        title: `${emoji} PuppyCare`,
-        body,
-      },
-      apns: {
-        payload: {
-          aps: {
-            sound: "default",
-            badge: 1,
+    try {
+      await getMessaging().send({
+        token,
+        notification: {
+          title: `${emoji} PuppyCare`,
+          body,
+        },
+        apns: {
+          payload: {
+            aps: {
+              sound: "default",
+              badge: 1,
+            },
           },
         },
-      },
-      // Pass the level as data so the app can handle it in the future.
-      data: {
-        level: after.level,
-      },
-    });
-
-    console.log(`Notification sent | level=${after.level} | reasons=${body}`);
+        // Pass the level as data so the app can handle it in the future.
+        data: {
+          level: after.level,
+        },
+      });
+      console.log(`Notification sent | level=${after.level} | reasons=${body}`);
+    } catch (err) {
+      // Without this catch, an invalid/expired token throws and the whole
+      // function invocation fails silently — the user never learns the alert
+      // wasn't delivered. If the token is no longer registered (app deleted
+      // or reinstalled), prune it so the next launch re-registers cleanly.
+      console.error(`FCM send failed | level=${after.level} | code=${err.code} | ${err.message}`);
+      if (
+        err.code === "messaging/registration-token-not-registered" ||
+        err.code === "messaging/invalid-registration-token"
+      ) {
+        await db.ref("/kennel/fcm_token").remove();
+        console.log("Pruned stale FCM token.");
+      }
+    }
   }
 );
