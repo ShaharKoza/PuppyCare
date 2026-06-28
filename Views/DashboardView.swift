@@ -604,7 +604,11 @@ struct DashboardView: View {
         .padding(14)
         .cardStyle()
         .sheet(isPresented: $showAlertsHistory) {
+            // loc propagates into sheets automatically on iOS 16+, but inject
+            // it explicitly so the dependency is self-documenting and immune
+            // to any future presentation-context change.
             AlertsHistoryView(alertManager: alertManager)
+                .environmentObject(loc)
         }
     }
 

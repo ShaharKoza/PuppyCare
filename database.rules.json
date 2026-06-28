@@ -12,7 +12,7 @@
     "kennel": {
 
       "sensors": {
-        ".read":  true,
+        ".read":  "auth != null",
         ".write": "auth != null",
         ".validate": "newData.hasChildren(['motion','sleeping','timestamp'])",
         "temperature":   { ".validate": "newData.isNumber() && newData.val() >= -40 && newData.val() <= 80" },
@@ -27,7 +27,7 @@
       },
 
       "sound": {
-        ".read":  true,
+        ".read":  "auth != null",
         ".write": "auth != null",
         "sound_active":    { ".validate": "newData.isBoolean()" },
         "bark_detected":   { ".validate": "newData.isBoolean()" },
@@ -38,7 +38,7 @@
       },
 
       "alert": {
-        ".read":  true,
+        ".read":  "auth != null",
         ".write": "auth != null",
         ".validate": "newData.hasChild('level')",
         "level": {
@@ -53,12 +53,12 @@
       },
 
       "camera": {
-        ".read":  true,
+        ".read":  "auth != null",
         ".write": "auth != null"
       },
 
       "heartbeat": {
-        ".read":  true,
+        ".read":  "auth != null",
         ".write": "auth != null",
         "timestamp": { ".validate": "newData.isString()" },
         "epoch_ms":  { ".validate": "newData.isNumber()" },
@@ -66,12 +66,12 @@
       },
 
       "diagnostics": {
-        ".read":  true,
+        ".read":  "auth != null",
         ".write": "auth != null"
       },
 
       "config": {
-        ".read":  true,
+        ".read":  "auth != null",
         ".write": "auth != null"
       },
 

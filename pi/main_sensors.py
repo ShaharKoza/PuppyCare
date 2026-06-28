@@ -130,6 +130,22 @@ GPIO.setup(PIN_LDR,   GPIO.IN)
 GPIO.setup(PIN_SOUND, GPIO.IN)
 GPIO.setup(PIN_PIR,   GPIO.IN)   # HC-SR501 has its own output driver; no pull needed
 
+
+def safe_gpio_read(pin, default=GPIO.LOW):
+    """Read a GPIO pin, returning `default` instead of propagating on error.
+
+    RPi.GPIO can raise RuntimeError if the GPIO context is lost (rare hardware
+    glitch, library re-init). On a unit that runs 24/7 an unhandled exception
+    here would kill the polling thread silently — that sensor then stays frozen
+    until the whole Pi is rebooted, with nothing in the logs. Swallowing the
+    error and logging it keeps every other sensor alive and leaves a trail.
+    """
+    try:
+        return GPIO.input(pin)
+    except Exception as e:               # noqa: BLE001 — deliberately broad
+        log.warning("GPIO read failed on pin %s: %s", pin, e)
+        return default
+
 # ─────────────────────────── shared state ─────────────────────────────────────
 state_lock = threading.Lock()
 state = {
@@ -258,10 +274,10 @@ def sound_loop():
     """Sample KY-038 digital output and update bark_detected / bark_count_5s / sustained_sound."""
     events     = deque()
     sound_on_since = None
-    prev = GPIO.input(PIN_SOUND)
+    prev = safe_gpio_read(PIN_SOUND)
 
     while True:
-        current = GPIO.input(PIN_SOUND)
+        current = safe_gpio_read(PIN_SOUND)
         now     = time.monotonic()
 
         # Rising edge — sound detected
@@ -301,7 +317,7 @@ def light_loop():
     transients from passing shadows or fluorescent ballast."""
     samples = deque(maxlen=LDR_DEBOUNCE_SAMPLES)
     while True:
-        raw   = GPIO.input(PIN_LDR)
+        raw   = safe_gpio_read(PIN_LDR)
         is_lit = (raw == GPIO.HIGH) if LDR_ACTIVE_HIGH else (raw == GPIO.LOW)
         samples.append(is_lit)
         if len(samples) == LDR_DEBOUNCE_SAMPLES and len(set(samples)) == 1:
@@ -320,7 +336,7 @@ def pir_loop():
     last_trigger = 0.0
 
     while True:
-        raw    = GPIO.input(PIN_PIR)
+        raw    = safe_gpio_read(PIN_PIR)
         motion = (raw == PIR_ACTIVE_LEVEL)
         now    = time.monotonic()
 

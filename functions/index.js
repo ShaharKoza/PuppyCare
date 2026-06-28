@@ -11,6 +11,12 @@ initializeApp();
 // not user-actionable and should not appear in push notifications.
 // ---------------------------------------------------------------------------
 function sanitizeReason(reason) {
+  // Guard against non-string entries. The reasons array comes from the Pi
+  // over the network; a corrupted write (number, null, object) would throw
+  // on .toLowerCase() and crash the whole notification — silently dropping
+  // a real alert. Coerce/skip instead.
+  if (typeof reason !== "string") return null;
+
   const lower = reason.toLowerCase();
 
   // DHT22 sensor errors → friendly substitute

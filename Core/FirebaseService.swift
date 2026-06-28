@@ -1,5 +1,6 @@
 import Foundation
 import FirebaseDatabase
+import FirebaseAuth
 import Combine
 
 @MainActor
@@ -40,9 +41,31 @@ final class FirebaseService: ObservableObject {
     private var cameraHandle:      DatabaseHandle?
     private var heartbeatHandle:   DatabaseHandle?
 
+    private var authListener: AuthStateDidChangeListenerHandle?
+
     private init() {}
 
+    /// Begin observing the database.
+    ///
+    /// The RTDB security rules require `auth != null` for reads, so observers
+    /// must only attach once anonymous sign-in has completed — otherwise the
+    /// first reads are denied and the dashboard stays blank. We therefore:
+    ///   • attach immediately if a user already exists (returning launch, the
+    ///     credential is restored from the keychain before any view loads), or
+    ///   • register a one-shot auth-state listener and attach the moment the
+    ///     anonymous sign-in lands (first-ever launch's network round-trip).
     func startListening() {
+        if Auth.auth().currentUser != nil {
+            attachObservers()
+        } else if authListener == nil {
+            authListener = Auth.auth().addStateDidChangeListener { [weak self] _, user in
+                guard user != nil else { return }
+                Task { @MainActor [weak self] in self?.attachObservers() }
+            }
+        }
+    }
+
+    private func attachObservers() {
         removeAllHandles()
         listenToConnection()
         listenToSensors()
